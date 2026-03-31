@@ -143,7 +143,7 @@
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 const USERS = {
   'admin@clothette.com':   { pass:'admin123',   role:'admin', name:'Admin',          initials:'CR' },
-  'lesdeux@clothette.com': { pass:'lesdeux123', role:'brand', brand:'les-deux-glh',  name:'Les Deux France', initials:'LD' },
+  'lesdeux@clothette.com': { pass:'lesdeux123', role:'brand', brand:'les-deux-glh', spaces:['les-deux-glh','les-deux-glce'], name:'Les Deux France', initials:'LD' },
   'nn07@clothette.com':    { pass:'nn07123',    role:'brand', brand:'nn07',          name:'NN07',            initials:'N7' },
 };
 
@@ -261,6 +261,7 @@ function doLogout() {
 // ─── SIDEBAR ─────────────────────────────────────────────────────────────────
 function renderSidebar() {
   const isAdmin = currentUser.role==='admin';
+  const isBrand = currentUser.role==='brand';
   const sp = SPACES[currentSpace];
   const pages = [
     {id:'overview',   label:"Vue d'ensemble"},
@@ -298,7 +299,21 @@ function renderSidebar() {
     <div class="sidebar-divider"></div>`;
   }
 
-  html+=`<div class="sidebar-section">Navigation — ${sp.brand} ${sp.storeLabel}</div>`;
+  if (isBrand && currentUser.spaces && currentUser.spaces.length > 1) {
+    html+=`<div class="sidebar-section">Mes points de vente</div>`;
+    currentUser.spaces.forEach(spaceId => {
+      const s = SPACES[spaceId];
+      const isActive = currentSpace === spaceId;
+      html+=`<div class="brand-pill ${isActive?'active':''}" style="${isActive?`background:${s.colorLight};color:${s.colorText}`:''}" onclick="switchSpace('${spaceId}')">
+        <div style="width:8px;height:8px;border-radius:50%;background:${s.color}"></div>
+        ${s.storeLabel}
+        <span class="store-badge" style="background:${s.colorLight};color:${s.colorText}">${s.store}</span>
+      </div>`;
+    });
+    html+=`<div class="sidebar-divider"></div>`;
+  }
+
+  html+=`<div class="sidebar-section">Navigation — ${sp.storeLabel}</div>`;
   pages.forEach(p=>{
     const isActive = currentPage===p.id;
     html+=`<div class="sidebar-item ${isActive?'active':''}" onclick="navigateTo('${p.id}')">${p.label}</div>`;
