@@ -869,8 +869,7 @@ function pageReassort() {
     <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem">Récapitulatif de la demande</div>
     <div id="summaryContent"></div>
     <div style="display:flex;gap:10px;margin-top:1rem;flex-wrap:wrap">
-      <button class="btn btn-primary" onclick="submitReassort()">Envoyer la demande</button>
-      <button class="btn" onclick="exportReassortExcel()">Exporter en Excel</button>
+      <button class="btn btn-primary" onclick="exportReassortExcel()">Exporter en Excel</button>
       <button class="btn" onclick="clearReassort()">Réinitialiser</button>
     </div>
   </div>`;
@@ -991,29 +990,6 @@ function clearReassort() {
   updateSummary();
 }
 
-function submitReassort() {
-  const rows = document.querySelectorAll('[id^="qty-"]');
-  const items = [];
-  rows.forEach((el,i) => {
-    const qty = parseInt(el.value)||0;
-    if (qty > 0) {
-      const ruleEl = document.getElementById(`rule-${i}`);
-      const ruleVal = ruleEl?.value || '';
-      if (!ruleVal) {
-        alert(`Veuillez choisir une justification pour ${el.dataset.ref} (${el.dataset.size})`);
-        ruleEl?.focus();
-        return;
-      }
-      items.push({ ref:el.dataset.ref, style:el.dataset.style, size:el.dataset.size, qty, rule:ruleEl.options[ruleEl.selectedIndex].text });
-    }
-  });
-  if (!items.length) { alert('Aucune quantité saisie.'); return; }
-  const sp = SPACES[currentSpace];
-  const date = new Date().toLocaleDateString('fr-FR');
-  const totalQty = items.reduce((s,r)=>s+r.qty,0);
-  alert(`Demande envoyée ✓\n\n${items.length} référence(s) · ${totalQty} unité(s)\n${sp.brand} · ${sp.storeLabel} · ${date}\n\nUn email récapitulatif a été envoyé.`);
-  clearReassort();
-}
 
 function exportReassortExcel() {
   const rows = document.querySelectorAll('[id^="qty-"]');
