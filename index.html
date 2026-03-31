@@ -764,7 +764,7 @@ function pageOverview(){
     <span class="badge" style="background:${sp.colorLight};color:${sp.colorText}">${sp.storeLabel}</span>
   </div>
   <div class="page-sub">Semaine du ${s.week}</div>
-  ${missing.length?`<div class="alert-banner" style="background:var(--warning-bg);border:0.5px solid var(--warning-border);color:var(--warning)">
+  ${missing.length?`<div class="alert-banner" style="background:var(--warning-bg);border:0.5px solid var(--warning);color:var(--warning)">
     <strong>${missing.length} référence(s) introuvable(s)</strong> — <span style="cursor:pointer;text-decoration:underline" onclick="navigateTo('catalogue')">Résoudre</span>
   </div>`:''}
   <div class="metric-row">
@@ -907,7 +907,7 @@ function bindDepot(){
 function showDepotFb(file,type){
   if(!file) return;
   document.getElementById('depotFeedback').innerHTML=`
-    <div class="alert-banner" style="background:var(--success-bg);border:0.5px solid var(--success-border);color:var(--success);margin-top:.5rem">
+    <div class="alert-banner" style="background:var(--success-bg);border:0.5px solid var(--success);color:var(--success);margin-top:.5rem">
       <strong>Fichier reçu : ${file.name}</strong><br>
       <span style="font-size:12px">Traitement en cours — stocks mis à jour automatiquement.</span>
     </div>`;
@@ -952,7 +952,7 @@ function pageCatalogue(){
       <td><button class="btn btn-sm" onclick="resolveRef(${i})">Résoudre</button></td>
     </tr>`).join('')}</tbody>
   </table></div>`:`
-  <div class="alert-banner" style="background:var(--success-bg);border:0.5px solid var(--success-border);color:var(--success);margin-top:1rem">Toutes les références sont à jour ✓</div>`}`;
+  <div class="alert-banner" style="background:var(--success-bg);border:0.5px solid var(--success);color:var(--success);margin-top:1rem">Toutes les références sont à jour ✓</div>`}`;
 }
 
 function bindCatalogue(){
@@ -960,7 +960,7 @@ function bindCatalogue(){
   if(ic) ic.addEventListener('change',e=>{
     if(!e.target.files[0]) return;
     document.getElementById('catFeedback').innerHTML=`
-      <div class="alert-banner" style="background:var(--success-bg);border:0.5px solid var(--success-border);color:var(--success);margin-top:.75rem">
+      <div class="alert-banner" style="background:var(--success-bg);border:0.5px solid var(--success);color:var(--success);margin-top:.75rem">
         <strong>Catalogue reçu : ${e.target.files[0].name}</strong>
       </div>`;
   });
