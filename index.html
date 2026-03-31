@@ -185,6 +185,38 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPA_URL = 'https://iqimndaucedbgavbtlen.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxaW1uZGF1Y2VkYmdhdmJ0bGVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NTE2NzgsImV4cCI6MjA5MDUyNzY3OH0.WayuEccuTsdzmIYl-0MZmDPGDckWEtqyHI-ZEu0rtKE';
+let sb = null;
+window.addEventListener('load', () => {
+  if (window.supabase) { sb = window.supabase.createClient(SUPA_URL, SUPA_KEY); console.log('Supabase OK'); }
+});
+async function loadCatalogueFromDB(brandId, limit=5000) {
+  if (!sb) return null;
+  const {data,error} = await sb.from('catalogue').select('*').eq('brand_id',brandId).limit(limit);
+  if (error) { console.error(error); return null; }
+  return data;
+}
+async function loadStocksFromDB(brandId, storeId) {
+  if (!sb) return null;
+  const {data,error} = await sb.from('stocks').select('*, catalogue(style_name,category,size,ean)').eq('brand_id',brandId).eq('store_id',storeId);
+  if (error) { console.error(error); return null; }
+  return data;
+}
+async function loadHistoryFromDB(brandId) {
+  if (!sb) return null;
+  const {data,error} = await sb.from('import_history').select('*').eq('brand_id',brandId).order('created_at',{ascending:false}).limit(20);
+  if (error) { console.error(error); return null; }
+  return data;
+}
+async function logImportToDB(brandId, fileName, type, total, ok, failed, status) {
+  if (!sb) return;
+  await sb.from('import_history').insert({brand_id:brandId,file_name:fileName,import_type:type,lines_total:total,lines_ok:ok,lines_failed:failed,status});
+}
+</script>
+
 <script>
 
 const USERS = {
@@ -381,10 +413,10 @@ function navigateTo(page) {
   if(page==='global')            m.innerHTML=pageGlobal();
   else if(page==='brand-global') m.innerHTML=pageBrandGlobal();
   else if(page==='overview')     m.innerHTML=pageOverview();
-  else if(page==='stocks')       m.innerHTML=pageStocks();
+  else if(page==='stocks')    m.innerHTML=pageStocks();
   else if(page==='depot')        { m.innerHTML=pageDepot(); setTimeout(bindDepot,0); }
-  else if(page==='catalogue')    { m.innerHTML=pageCatalogue(); setTimeout(bindCatalogue,0); }
-  else if(page==='historique')   m.innerHTML=pageHistorique();
+  else if(page==='catalogue')    { m.innerHTML='<div style="padding:2rem;color:var(--text3)">Chargement...</div>'; pageCatalogueAsync().then(()=>{}); }
+  else if(page==='historique')   { m.innerHTML='<div style="padding:2rem;color:var(--text3)">Chargement...</div>'; pageHistoriqueAsync().then(()=>{}); }
   else if(page==='reassort')     { m.innerHTML=pageReassort(); setTimeout(bindReassort,0); }
 }
 
@@ -612,8 +644,22 @@ function pageOverview(){
 }
 
 // ─── STOCKS ───────────────────────────────────────────────────────────────────
-function pageStocks(){
-  const sp=SPACES[currentSpace], stocks=STOCKS[currentSpace]||[];
+async function pageStocks(){
+  const sp=SPACES[currentSpace];
+  let stocks = STOCKS[currentSpace]||[];
+  if (sb) {
+    const dbStocks = await loadStocksFromDB(sp.id, sp.store);
+    if (dbStocks && dbStocks.length > 0) {
+      stocks = dbStocks.map(r => ({
+        ref: r.catalogue?.ean || r.ean,
+        style: r.catalogue?.style_name || '',
+        size: r.catalogue?.size || '',
+        cat: r.catalogue?.category || '',
+        qty: r.quantity || 0,
+        min: r.min_quantity || 3,
+      }));
+    }
+  }
   return `
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:.25rem">
     <div class="page-title">Stocks</div>
@@ -1017,6 +1063,97 @@ function exportReassortExcel() {
 
 function bindReassort() {
   renderReassortTable();
+}
+
+
+async function pageCatalogueAsync() {
+  const m = document.getElementById('mainContent');
+  const sp = SPACES[currentSpace];
+  const missing = MISSING[currentSpace]||[];
+  let totalRefs = 3895;
+  let collections = [{name:'AW25 — Automne Hiver 2025', refs:2847, status:'ok'}, {name:'SS26 — Printemps Été 2026', refs:1048, status:'info'}];
+  if (sb) {
+    const {count} = await sb.from('catalogue').select('*', {count:'exact',head:true}).eq('brand_id', sp.id.replace('-glh','').replace('-glce',''));
+    if (count) totalRefs = count;
+  }
+  m.innerHTML = pageCatalogueWith(sp, missing, totalRefs);
+  setTimeout(bindCatalogue, 0);
+}
+
+function pageCatalogueWith(sp, missing, totalRefs) {
+  return `
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:.25rem">
+    <div class="page-title">Catalogue produits</div>
+    <span class="badge badge-accent">${sp.brand}</span>
+  </div>
+  <div class="page-sub">${totalRefs.toLocaleString('fr-FR')} références · mis à jour le 16 janv. 2026</div>
+  <div class="section-label" style="margin-top:0">Collections actives</div>
+  <div class="collection-card" style="border-left:3px solid var(--accent)">
+    <div><div style="font-size:13px;font-weight:400">AW25 — Automne Hiver 2025</div>
+    <div style="font-size:12px;color:var(--text3)">Collection principale</div></div>
+    <span class="badge badge-ok">actif</span>
+  </div>
+  <div class="collection-card">
+    <div><div style="font-size:13px;font-weight:400">SS26 — Printemps Été 2026</div>
+    <div style="font-size:12px;color:var(--text3)">Nouvelle collection</div></div>
+    <span class="badge badge-info">nouveau</span>
+  </div>
+  <div class="section-label">Ajouter une collection</div>
+  <div class="drop-zone" onclick="document.getElementById('inCat').click()">
+    <div style="font-size:22px;opacity:.35;margin-bottom:8px">↑</div>
+    <div style="font-size:14px;font-weight:400;margin-bottom:.3rem">Glissez le catalogue de la nouvelle collection</div>
+    <div style="font-size:12px;color:var(--text3)">.xlsx · Season, Style no., Style, Color, Color Code, Size, Category, EAN</div>
+    <input type="file" id="inCat" accept=".xlsx,.xls" style="display:none">
+  </div>
+  <div id="catFeedback"></div>
+  ${missing.length ? `
+  <div class="section-label">Références introuvables (${missing.length})</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Référence</th><th>Article</th><th>Couleur / Taille</th><th>Qté</th><th></th></tr></thead>
+    <tbody>${missing.map((r,i)=>`<tr>
+      <td class="mono">${r.ref}</td><td style="color:var(--text2)">${r.style}</td>
+      <td style="color:var(--text2);font-size:12px">${r.colorSize}</td>
+      <td style="font-weight:500">${r.qty}</td>
+      <td><button class="btn btn-sm" onclick="resolveRef(${i})">Résoudre</button></td>
+    </tr>`).join('')}</tbody>
+  </table></div>` : `
+  <div class="alert-banner" style="background:var(--success-bg);border:1px solid var(--success);color:var(--success);margin-top:1rem">
+    Toutes les références sont à jour ✓ · ${totalRefs.toLocaleString('fr-FR')} références dans Supabase
+  </div>`}`;
+}
+
+async function pageHistoriqueAsync() {
+  const m = document.getElementById('mainContent');
+  const sp = SPACES[currentSpace];
+  let history = HISTORY[currentSpace]||[];
+  if (sb) {
+    const dbHistory = await loadHistoryFromDB(sp.id);
+    if (dbHistory && dbHistory.length > 0) {
+      history = dbHistory.map(h => ({
+        file: h.file_name,
+        type: h.import_type,
+        date: new Date(h.created_at).toLocaleDateString('fr-FR'),
+        lines: h.lines_total,
+        status: h.status
+      }));
+    }
+  }
+  m.innerHTML = `
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:.25rem">
+    <div class="page-title">Historique</div>
+    <span class="badge badge-accent">${sp.brand} · ${sp.storeLabel}</span>
+  </div>
+  <div class="page-sub">${history.length} imports enregistrés</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Fichier</th><th>Type</th><th>Date</th><th>Lignes</th><th>Statut</th></tr></thead>
+    <tbody>${history.map(f=>`<tr>
+      <td style="font-size:12px">${f.file}</td>
+      <td><span class="badge badge-${f.type==='ventes'?'info':'accent'}">${f.type}</span></td>
+      <td style="color:var(--text2);font-size:12px">${f.date}</td>
+      <td>${f.lines}</td>
+      <td><span class="badge badge-${f.status==='ok'?'ok':'warn'}">${f.status==='ok'?'OK':'Partiel'}</span></td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
 }
 
 </script>
