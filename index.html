@@ -644,22 +644,9 @@ function pageOverview(){
 }
 
 // ─── STOCKS ───────────────────────────────────────────────────────────────────
-async function pageStocks(){
+function pageStocks(){
   const sp=SPACES[currentSpace];
   let stocks = STOCKS[currentSpace]||[];
-  if (sb) {
-    const dbStocks = await loadStocksFromDB(sp.id, sp.store);
-    if (dbStocks && dbStocks.length > 0) {
-      stocks = dbStocks.map(r => ({
-        ref: r.catalogue?.ean || r.ean,
-        style: r.catalogue?.style_name || '',
-        size: r.catalogue?.size || '',
-        cat: r.catalogue?.category || '',
-        qty: r.quantity || 0,
-        min: r.min_quantity || 3,
-      }));
-    }
-  }
   return `
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:.25rem">
     <div class="page-title">Stocks</div>
