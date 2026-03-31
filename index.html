@@ -5,6 +5,192 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Clothette Retail</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #F5F5F7;
+      --bg2:     #FFFFFF;
+      --bg3:     #F5F5F7;
+      --bg4:     #E8E8ED;
+      --border:  #D2D2D7;
+      --border2: #B0B0BB;
+      --text:    #1D1D1F;
+      --text2:   #6E6E73;
+      --text3:   #AEAEB2;
+      --accent:  #0071E3;
+      --accent-light: #EBF3FF;
+      --accent-text:  #0051A2;
+      --success:     #1D8348;
+      --success-bg:  #EAF5EE;
+      --warning:     #9A6400;
+      --warning-bg:  #FDF6E3;
+      --danger:      #C0392B;
+      --danger-bg:   #FDECEB;
+      --info:        #0071E3;
+      --info-bg:     #EBF3FF;
+      --font-serif: 'Cormorant Garamond', serif;
+      --font-sans: 'DM Sans', sans-serif;
+      --r: 10px; --rl: 14px;
+    }
+    html, body { height: 100%; font-family: var(--font-sans); color: var(--text); background: var(--bg); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg3); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* LOGIN */
+    .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }
+    .login-box { background: var(--bg2); border: none; border-radius: 18px; padding: 2.75rem; width: 100%; max-width: 380px; box-shadow: 0 2px 24px rgba(0,0,0,0.08), 0 0 0 0.5px var(--border); }
+    .login-logo { font-family: var(--font-serif); font-size: 26px; font-weight: 400; margin-bottom: .15rem; color: var(--text); letter-spacing: .01em; }
+    .login-logo span { color: var(--accent); font-style: italic; }
+    .login-sub { font-size: 12px; color: var(--text3); margin-bottom: 2rem; letter-spacing: .02em; }
+    .login-field { margin-bottom: .85rem; }
+    .login-field label { display: block; font-size: 11px; font-weight: 500; color: var(--text2); margin-bottom: .35rem; letter-spacing: .02em; }
+    .login-field input { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 14px; font-family: var(--font-sans); outline: none; transition: border-color .15s, box-shadow .15s; background: var(--bg3); color: var(--text); }
+    .login-field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,.12); background: var(--bg2); }
+    .login-field input::placeholder { color: var(--text3); }
+    .btn-login { width: 100%; background: var(--accent); color: white; border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 500; font-family: var(--font-sans); cursor: pointer; margin-top: .5rem; transition: opacity .15s; letter-spacing: .01em; }
+    .btn-login:hover { opacity: .88; }
+    .login-hint { display: flex; gap: 1.5rem; margin-top: 1.25rem; font-size: 12px; color: var(--accent); justify-content: center; }
+    .login-hint span { cursor: pointer; }
+    .login-hint span:hover { text-decoration: underline; }
+
+    /* TOPNAV */
+    .topnav { display: flex; align-items: center; justify-content: space-between; padding: .75rem 1.5rem; border-bottom: 0.5px solid var(--border); background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 100; }
+    .nav-logo { font-family: var(--font-serif); font-size: 17px; font-weight: 400; letter-spacing: .02em; color: var(--text); }
+    .nav-logo span { color: var(--accent); font-style: italic; }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .nav-role { font-size: 11px; background: var(--accent-light); color: var(--accent-text); padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+    .avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: white; }
+    .btn-logout { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 5px 12px; font-size: 12px; font-family: var(--font-sans); cursor: pointer; color: var(--text2); transition: all .15s; }
+    .btn-logout:hover { background: var(--bg3); color: var(--text); }
+
+    /* LAYOUT */
+    .app-layout { display: flex; min-height: calc(100vh - 50px); }
+    .sidebar { width: 220px; border-right: 0.5px solid var(--border); background: rgba(255,255,255,0.6); backdrop-filter: blur(20px); flex-shrink: 0; padding: .75rem 0; overflow-y: auto; }
+    .main-content { flex: 1; padding: 1.75rem; background: var(--bg); overflow-y: auto; }
+
+    /* SIDEBAR */
+    .sidebar-section { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--text3); padding: .85rem 1.25rem .3rem; font-weight: 500; }
+    .sidebar-item { display: flex; align-items: center; gap: 9px; padding: .55rem 1rem; font-size: 13px; cursor: pointer; color: var(--text2); border-radius: 8px; margin: 1px .5rem; transition: all .12s; }
+    .sidebar-item:hover { color: var(--text); background: var(--bg4); }
+    .sidebar-item.active { color: var(--accent); font-weight: 500; background: var(--accent-light); }
+    .brand-pill { display: flex; align-items: center; gap: 8px; padding: .45rem .75rem; font-size: 12px; cursor: pointer; border-radius: 8px; margin: 2px .5rem; transition: all .12s; color: var(--text2); }
+    .brand-pill:hover { background: var(--bg4); color: var(--text); }
+    .sidebar-divider { height: 0.5px; background: var(--border); margin: .5rem 1rem; }
+    .store-badge { display: inline-flex; padding: 1px 7px; border-radius: 20px; font-size: 10px; font-weight: 500; margin-left: auto; }
+
+    /* PAGE */
+    .page-title { font-family: var(--font-serif); font-size: 28px; font-weight: 400; margin-bottom: .15rem; color: var(--text); }
+    .page-sub { font-size: 12px; color: var(--text3); margin-bottom: 1.5rem; }
+
+    /* METRICS */
+    .metric-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+    .metric { background: var(--bg2); border: none; border-radius: var(--rl); padding: 1rem 1.1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 0.5px var(--border); }
+    .metric-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .35rem; }
+    .metric-value { font-size: 26px; font-weight: 300; line-height: 1.1; font-family: var(--font-serif); }
+
+    /* CARDS */
+    .card { background: var(--bg2); border: none; border-radius: var(--rl); padding: 1.1rem 1.25rem; margin-bottom: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 0.5px var(--border); }
+    .card-title { font-size: 11px; font-weight: 500; margin-bottom: .85rem; color: var(--text2); text-transform: uppercase; letter-spacing: .07em; }
+    .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 1rem; }
+    .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 1rem; }
+
+    /* TABLE */
+    .table-wrap { background: var(--bg2); border: none; border-radius: var(--rl); overflow: hidden; margin-bottom: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 0.5px var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: var(--bg3); padding: 9px 16px; text-align: left; font-size: 10px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); border-bottom: 0.5px solid var(--border); }
+    td { padding: 11px 16px; border-bottom: 0.5px solid var(--border); color: var(--text); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg3); }
+
+    /* BADGES */
+    .badge { display: inline-flex; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+    .badge-ok     { background: var(--success-bg); color: var(--success); }
+    .badge-warn   { background: var(--warning-bg); color: var(--warning); }
+    .badge-danger { background: var(--danger-bg);  color: var(--danger); }
+    .badge-info   { background: var(--info-bg);    color: var(--info); }
+    .badge-accent { background: var(--accent-light); color: var(--accent-text); }
+
+    /* BUTTONS */
+    .btn { display: inline-flex; align-items: center; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 400; font-family: var(--font-sans); cursor: pointer; border: 1px solid var(--border); background: var(--bg2); color: var(--text); transition: all .15s; }
+    .btn:hover { background: var(--bg3); }
+    .btn-sm { padding: 4px 10px; font-size: 11px; border-radius: 6px; }
+    .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+    .btn-primary:hover { opacity: .88; background: var(--accent); }
+
+    /* FORMS */
+    .search-bar { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+    .search-input { border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; font-size: 13px; font-family: var(--font-sans); background: var(--bg2); color: var(--text); outline: none; min-width: 180px; flex: 1; transition: border-color .15s, box-shadow .15s; }
+    .search-input::placeholder { color: var(--text3); }
+    .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,.1); }
+    .filter-select { border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; font-size: 13px; font-family: var(--font-sans); background: var(--bg2); color: var(--text); outline: none; cursor: pointer; }
+
+    /* DROP ZONES */
+    .drop-zone { border: 1.5px dashed var(--border2); border-radius: var(--rl); padding: 2.5rem 1.5rem; text-align: center; cursor: pointer; transition: all .15s; background: var(--bg3); }
+    .drop-zone:hover { background: var(--accent-light); border-color: var(--accent); }
+    .drop-zone-sm { border: 1px dashed var(--border); border-radius: var(--r); padding: 1.25rem; text-align: center; cursor: pointer; background: var(--bg3); transition: all .15s; }
+    .drop-zone-sm:hover { background: var(--accent-light); border-color: var(--accent); }
+
+    /* MISC */
+    .section-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .1em; color: var(--text3); margin-bottom: .6rem; margin-top: 1.25rem; }
+    .alert-banner { border-radius: 10px; padding: .85rem 1rem; font-size: 13px; margin-bottom: 1rem; }
+    .bar-track { height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 2px; }
+    .file-row { display: flex; align-items: center; justify-content: space-between; padding: .85rem 1.25rem; border-bottom: 0.5px solid var(--border); }
+    .file-row:last-child { border-bottom: none; }
+    .file-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; flex-shrink: 0; }
+    .collection-card { display: flex; align-items: center; justify-content: space-between; padding: .85rem 1.25rem; background: var(--bg2); border-radius: var(--rl); margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 0 0 0.5px var(--border); }
+    .mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; color: var(--text2); }
+    @media (max-width: 640px) { .sidebar { display: none; } .main-content { padding: 1rem; } }
+  </style>
+</head>
+<body>
+
+<div id="loginScreen" class="login-screen">
+  <div class="login-box">
+    <div class="login-logo">The Clothette <span>Retail</span></div>
+    <div class="login-sub">Plateforme de gestion des stocks</div>
+    <div class="login-field">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="votre@email.com">
+    </div>
+    <div class="login-field">
+      <label>Mot de passe</label>
+      <input type="password" id="loginPass" placeholder="••••••••">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Se connecter</button>
+    <div class="login-hint">
+      <span onclick="setDemo('admin')">Admin →</span>
+      <span onclick="setDemo('brand')">Vue marque →</span>
+    </div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <nav class="topnav">
+    <div class="nav-logo">The Clothette <span>Retail</span></div>
+    <div id="navCenter" style="font-size:12px;color:var(--text3)"></div>
+    <div class="nav-right">
+      <span class="nav-role" id="navRole"></span>
+      <div class="avatar" id="navAvatar"></div>
+      <button class="btn-logout" onclick="doLogout()">Déconnexion</button>
+    </div>
+  </nav>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main-content" id="mainContent"></main>
+  </div>
+</div>
+
+<script>
+PE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Clothette Retail</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -200,9 +386,9 @@ const USERS = {
 
 // Espaces de travail — chaque espace = une marque + un point de vente
 const SPACES = {
-  'les-deux-glh':  { id:'les-deux-glh',  brand:'Les Deux', store:'GLH',  storeLabel:'GL Haussmann',      color:'#C9A96E', colorLight:'#2A2118', colorText:'#C9A96E' },
-  'les-deux-glce': { id:'les-deux-glce', brand:'Les Deux', store:'GLCE', storeLabel:'GL Champs-Élysées', color:'#C9A96E', colorLight:'#2A2118', colorText:'#C9A96E' },
-  'nn07-glh':      { id:'nn07-glh',      brand:'NN07',     store:'GLH',  storeLabel:'GL Haussmann',      color:'#5A9E6F', colorLight:'#0F2018', colorText:'#5A9E6F' },
+  'les-deux-glh':  { id:'les-deux-glh',  brand:'Les Deux', store:'GLH',  storeLabel:'GL Haussmann',      color:'#0071E3', colorLight:'#EBF3FF', colorText:'#0051A2' },
+  'les-deux-glce': { id:'les-deux-glce', brand:'Les Deux', store:'GLCE', storeLabel:'GL Champs-Élysées', color:'#0071E3', colorLight:'#EBF3FF', colorText:'#0051A2' },
+  'nn07-glh':      { id:'nn07-glh',      brand:'NN07',     store:'GLH',  storeLabel:'GL Haussmann',      color:'#1D8348', colorLight:'#EAF5EE', colorText:'#1D8348' },
 };
 
 const STOCKS = {
@@ -330,15 +516,15 @@ function renderSidebar() {
     </div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-section">Les Deux</div>
-    <div class="brand-pill ${currentSpace==='les-deux-glh'?'active':''}" style="${currentSpace==='les-deux-glh'?'background:var(--gold-dim);color:var(--gold)':''}" onclick="switchSpace('les-deux-glh')">
+    <div class="brand-pill ${currentSpace==='les-deux-glh'?'active':''}" style="${currentSpace==='les-deux-glh'?'background:var(--accent-light);color:var(--accent)':''}" onclick="switchSpace('les-deux-glh')">
       <div style="width:8px;height:8px;border-radius:50%;background:#534AB7"></div>
       GL Haussmann
-      <span class="store-badge" style="background:var(--gold-dim);color:var(--gold)">GLH</span>
+      <span class="store-badge" style="background:var(--accent-light);color:var(--accent)">GLH</span>
     </div>
-    <div class="brand-pill ${currentSpace==='les-deux-glce'?'active':''}" style="${currentSpace==='les-deux-glce'?'background:var(--gold-dim);color:var(--gold)':''}" onclick="switchSpace('les-deux-glce')">
+    <div class="brand-pill ${currentSpace==='les-deux-glce'?'active':''}" style="${currentSpace==='les-deux-glce'?'background:var(--accent-light);color:var(--accent)':''}" onclick="switchSpace('les-deux-glce')">
       <div style="width:8px;height:8px;border-radius:50%;background:#534AB7"></div>
       GL Champs-Élysées
-      <span class="store-badge" style="background:var(--gold-dim);color:var(--gold)">GLCE</span>
+      <span class="store-badge" style="background:var(--accent-light);color:var(--accent)">GLCE</span>
     </div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-section">NN07</div>
@@ -702,7 +888,7 @@ function pageDepot(){
   <div class="card" style="padding:0">
     ${h.map(f=>`<div class="file-row">
       <div style="display:flex;align-items:center;gap:12px">
-        <div class="file-icon" style="background:${f.type==='ventes'?'var(--info-bg)':'var(--gold-dim)'};color:${f.type==='ventes'?'var(--info)':'var(--gold)'}">XLS</div>
+        <div class="file-icon" style="background:${f.type==='ventes'?'var(--info-bg)':'var(--accent-light)'};color:${f.type==='ventes'?'var(--info)':'var(--accent-text)'}">XLS</div>
         <div><div style="font-size:13px;font-weight:500">${f.file}</div>
         <div style="font-size:11px;color:var(--muted)">${f.date} · ${f.lines} lignes</div></div>
       </div>
@@ -802,6 +988,7 @@ function pageHistorique(){
     </tr>`).join('')}</tbody>
   </table></div>`;
 }
+
 
 </script>
 </body>
