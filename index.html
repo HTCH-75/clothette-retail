@@ -6,22 +6,107 @@
   <title>The Clothette Retail</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="public/style.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #1A1714; --cream: #F9F6F1; --muted: #7A7570; --border: #E8E3DB; --white: #FFFFFF;
+      --accent: #534AB7; --accent-light: #EEEDFE; --accent-text: #3C3489;
+      --success: #3B6D11; --success-bg: #EAF3DE; --success-border: #97C459;
+      --warning: #854F0B; --warning-bg: #FAEEDA; --warning-border: #EF9F27;
+      --danger: #A32D2D; --danger-bg: #FCEBEB; --danger-border: #E24B4A;
+      --info: #0C447C; --info-bg: #E6F1FB; --info-border: #378ADD;
+      --font-serif: 'Cormorant Garamond', serif; --font-sans: 'DM Sans', sans-serif;
+      --r: 8px; --rl: 12px;
+    }
+    html, body { height: 100%; font-family: var(--font-sans); color: var(--ink); background: var(--cream); font-size: 14px; line-height: 1.6; }
+    .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .login-box { background: var(--white); border: 0.5px solid var(--border); border-radius: var(--rl); padding: 2.5rem; width: 100%; max-width: 380px; box-shadow: 0 2px 20px rgba(0,0,0,0.06); }
+    .login-logo { font-family: var(--font-serif); font-size: 26px; font-weight: 500; margin-bottom: .25rem; }
+    .login-logo span { color: var(--accent); font-style: italic; }
+    .login-sub { font-size: 13px; color: var(--muted); margin-bottom: 2rem; }
+    .login-field { margin-bottom: 1rem; }
+    .login-field label { display: block; font-size: 11px; font-weight: 500; color: var(--muted); margin-bottom: .4rem; text-transform: uppercase; letter-spacing: .06em; }
+    .login-field input { width: 100%; border: 0.5px solid var(--border); border-radius: var(--r); padding: 10px 12px; font-size: 13px; font-family: var(--font-sans); outline: none; transition: border-color .15s; }
+    .login-field input:focus { border-color: var(--accent); }
+    .btn-login { width: 100%; background: var(--ink); color: var(--white); border: none; border-radius: var(--r); padding: 11px; font-size: 14px; font-weight: 500; font-family: var(--font-sans); cursor: pointer; margin-top: .5rem; transition: opacity .15s; }
+    .btn-login:hover { opacity: .85; }
+    .login-hint { display: flex; gap: 1rem; margin-top: 1.25rem; font-size: 12px; color: var(--accent); justify-content: center; }
+    .login-hint span { cursor: pointer; text-decoration: underline; }
+    .topnav { display: flex; align-items: center; justify-content: space-between; padding: .75rem 1.5rem; border-bottom: 0.5px solid var(--border); background: var(--white); position: sticky; top: 0; z-index: 100; }
+    .nav-logo { font-family: var(--font-serif); font-size: 18px; font-weight: 500; }
+    .nav-logo span { color: var(--accent); font-style: italic; }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .nav-role { font-size: 11px; background: var(--accent-light); color: var(--accent-text); padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+    .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: var(--accent-text); }
+    .btn-logout { background: none; border: 0.5px solid var(--border); border-radius: var(--r); padding: 5px 12px; font-size: 12px; font-family: var(--font-sans); cursor: pointer; color: var(--muted); }
+    .btn-logout:hover { background: var(--cream); }
+    .app-layout { display: flex; min-height: calc(100vh - 49px); }
+    .sidebar { width: 210px; border-right: 0.5px solid var(--border); background: var(--white); flex-shrink: 0; padding: .75rem 0; }
+    .main-content { flex: 1; padding: 1.5rem; background: var(--cream); overflow-y: auto; }
+    .sidebar-section { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); padding: .85rem 1.25rem .3rem; font-weight: 500; }
+    .sidebar-item { display: flex; align-items: center; gap: 9px; padding: .6rem 1.25rem; font-size: 13px; cursor: pointer; color: var(--muted); border-left: 2px solid transparent; transition: all .12s; }
+    .sidebar-item:hover { color: var(--ink); background: var(--cream); }
+    .sidebar-item.active { color: var(--ink); font-weight: 500; border-left-color: var(--accent); background: var(--cream); }
+    .brand-pill { display: flex; align-items: center; gap: 8px; padding: .5rem .75rem; font-size: 12px; cursor: pointer; border-radius: var(--r); margin: 0 .5rem; transition: background .12s; color: var(--muted); }
+    .brand-pill:hover { background: var(--cream); color: var(--ink); }
+    .brand-pill.active { background: var(--accent-light); color: var(--accent-text); font-weight: 500; }
+    .page-title { font-size: 20px; font-weight: 500; margin-bottom: .2rem; }
+    .page-sub { font-size: 13px; color: var(--muted); margin-bottom: 1.25rem; }
+    .metric-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+    .metric { background: var(--white); border: 0.5px solid var(--border); border-radius: var(--r); padding: .85rem 1rem; }
+    .metric-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .3rem; }
+    .metric-value { font-size: 22px; font-weight: 500; line-height: 1.1; }
+    .card { background: var(--white); border: 0.5px solid var(--border); border-radius: var(--rl); padding: 1rem 1.25rem; margin-bottom: 1rem; }
+    .card-title { font-size: 13px; font-weight: 500; margin-bottom: .85rem; }
+    .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 1rem; }
+    .table-wrap { background: var(--white); border: 0.5px solid var(--border); border-radius: var(--rl); overflow: hidden; margin-bottom: 1rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: var(--cream); padding: 9px 14px; text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border-bottom: 0.5px solid var(--border); }
+    td { padding: 10px 14px; border-bottom: 0.5px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fdfcfa; }
+    .badge { display: inline-flex; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+    .badge-ok { background: var(--success-bg); color: var(--success); }
+    .badge-warn { background: var(--warning-bg); color: var(--warning); }
+    .badge-danger { background: var(--danger-bg); color: var(--danger); }
+    .badge-info { background: var(--info-bg); color: var(--info); }
+    .badge-accent { background: var(--accent-light); color: var(--accent-text); }
+    .btn { display: inline-flex; align-items: center; padding: 8px 18px; border-radius: var(--r); font-size: 13px; font-weight: 500; font-family: var(--font-sans); cursor: pointer; border: 0.5px solid var(--border); background: transparent; color: var(--ink); transition: all .15s; }
+    .btn:hover { background: var(--cream); }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+    .search-bar { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+    .search-input { border: 0.5px solid var(--border); border-radius: var(--r); padding: 7px 12px; font-size: 13px; font-family: var(--font-sans); background: var(--white); color: var(--ink); outline: none; min-width: 200px; flex: 1; }
+    .search-input:focus { border-color: var(--accent); }
+    .filter-select { border: 0.5px solid var(--border); border-radius: var(--r); padding: 7px 12px; font-size: 13px; font-family: var(--font-sans); background: var(--white); color: var(--ink); outline: none; cursor: pointer; }
+    .drop-zone { border: 1.5px dashed var(--border); border-radius: var(--rl); padding: 2rem 1.5rem; text-align: center; cursor: pointer; transition: all .15s; background: var(--cream); }
+    .drop-zone:hover { background: var(--info-bg); border-color: var(--accent); }
+    .drop-zone-sm { border: 1px dashed var(--border); border-radius: var(--r); padding: 1.25rem; text-align: center; cursor: pointer; background: var(--cream); transition: all .15s; }
+    .drop-zone-sm:hover { background: var(--white); border-color: var(--accent); }
+    .section-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: .6rem; margin-top: 1.25rem; }
+    .alert-banner { border-radius: var(--r); padding: .75rem 1rem; font-size: 13px; margin-bottom: 1rem; }
+    .bar-track { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; }
+    .file-row { display: flex; align-items: center; justify-content: space-between; padding: .75rem 1.25rem; border-bottom: 0.5px solid var(--border); }
+    .file-row:last-child { border-bottom: none; }
+    .file-icon { width: 34px; height: 34px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; flex-shrink: 0; }
+    .collection-card { display: flex; align-items: center; justify-content: space-between; padding: .85rem 1.25rem; background: var(--white); border: 0.5px solid var(--border); border-radius: var(--rl); margin-bottom: 8px; }
+    .collection-active { border-left: 3px solid var(--accent); }
+    .mono { font-family: 'Courier New', monospace; font-size: 12px; }
+  </style>
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
 <div id="loginScreen" class="login-screen">
   <div class="login-box">
     <div class="login-logo">The Clothette <span>Retail</span></div>
     <div class="login-sub">Plateforme de gestion des stocks</div>
     <div class="login-field">
       <label>Email</label>
-      <input type="email" id="loginEmail" placeholder="votre@email.com" value="admin@clothette.com">
+      <input type="email" id="loginEmail" placeholder="votre@email.com">
     </div>
     <div class="login-field">
       <label>Mot de passe</label>
-      <input type="password" id="loginPass" placeholder="••••••••" value="••••••••">
+      <input type="password" id="loginPass" placeholder="••••••••">
     </div>
     <button class="btn-login" onclick="doLogin()">Se connecter</button>
     <div class="login-hint">
@@ -31,35 +116,380 @@
   </div>
 </div>
 
-<!-- APP -->
 <div id="app" style="display:none">
-
-  <!-- NAV -->
   <nav class="topnav">
     <div class="nav-logo">The Clothette <span>Retail</span></div>
-    <div class="nav-center" id="navBrandBadge"></div>
+    <div id="navCenter" style="font-size:12px;color:var(--muted)"></div>
     <div class="nav-right">
       <span class="nav-role" id="navRole"></span>
       <div class="avatar" id="navAvatar"></div>
       <button class="btn-logout" onclick="doLogout()">Déconnexion</button>
     </div>
   </nav>
-
   <div class="app-layout">
-
-    <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar"></aside>
-
-    <!-- MAIN -->
     <main class="main-content" id="mainContent"></main>
-
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="public/data.js"></script>
-<script src="app.js"></script>
-<script>document.addEventListener('DOMContentLoaded', initSupabase);</script>
+<script>
+const USERS = {
+  'admin@clothette.com':   { pass:'admin123',   role:'admin', name:'Admin',          initials:'CR' },
+  'lesdeux@clothette.com': { pass:'lesdeux123', role:'brand', brand:'les-deux',      name:'Les Deux France', initials:'LD' },
+  'nn07@clothette.com':    { pass:'nn07123',    role:'brand', brand:'nn07',          name:'NN07',            initials:'N7' },
+};
+const BRANDS = {
+  'les-deux': { id:'les-deux', name:'Les Deux', fullName:'Les Deux France', color:'#534AB7', stores:['GLH','GLCE'] },
+  'nn07':     { id:'nn07',     name:'NN07',     fullName:'NN07',            color:'#1D9E75', stores:['GLH-NN07'] },
+};
+const STORES = { 'GLH':{label:'GL Haussmann'}, 'GLCE':{label:'GL Champs-Élysées'}, 'GLH-NN07':{label:'GL Haussmann'} };
+const STOCKS = {
+  'les-deux': [
+    {ref:'1002138-211',style:'SS26 Cap',      size:'ONE',  cat:'Accessoires',glh:2,glce:1,min:5},
+    {ref:'1001317-826',style:'Ty Beanie',     size:'ONE',  cat:'Accessoires',glh:8,glce:4,min:4},
+    {ref:'1001546-201',style:'Carl T-shirt',  size:'S',    cat:'T-SHIRT',    glh:5,glce:3,min:4},
+    {ref:'1001546-201',style:'Carl T-shirt',  size:'M',    cat:'T-SHIRT',    glh:7,glce:4,min:4},
+    {ref:'1001514-815',style:'James Blazer',  size:'48',   cat:'BLAZER',     glh:1,glce:2,min:3},
+    {ref:'1001320-826',style:'Sheldon Blazer',size:'50',   cat:'BLAZER',     glh:0,glce:1,min:3},
+    {ref:'1001306-553',style:'Ricky Jeans',   size:'32/32',cat:'JEANS',      glh:3,glce:0,min:4},
+    {ref:'1002023-201',style:'Logo Tee',      size:'L',    cat:'T-SHIRT',    glh:6,glce:5,min:4},
+    {ref:'LDM101008',  style:'LD Cap',        size:'ONE',  cat:'Accessoires',glh:0,glce:0,min:3},
+  ],
+  'nn07': [
+    {ref:'1963323487-003-S',style:'Clive Egg White',size:'S',cat:'JERSEY',glh:4,glce:0,min:3},
+    {ref:'1963323487-003-M',style:'Clive Egg White',size:'M',cat:'JERSEY',glh:6,glce:0,min:3},
+    {ref:'1963323487-200-S',style:'Clive Navy',     size:'S',cat:'JERSEY',glh:5,glce:0,min:3},
+    {ref:'1963323487-200-M',style:'Clive Navy',     size:'M',cat:'JERSEY',glh:7,glce:0,min:3},
+  ],
+};
+const SALES = {
+  'les-deux': { week:'23-30 mars 2026',total:195,returns:7,ca:20150,byStore:{GLH:137,GLCE:58},
+    byDay:[{l:'Lu',v:13},{l:'Ma',v:20},{l:'Me',v:18},{l:'Je',v:10},{l:'Ve',v:49},{l:'Sa',v:57},{l:'Di',v:30}],
+    topRefs:[{ref:'1002138-211',qty:6},{ref:'1001317-826',qty:5},{ref:'1001546-201',qty:4},{ref:'1001514-815',qty:4},{ref:'1001320-826',qty:4}],
+    sellThrough:68 },
+  'nn07': { week:'23-30 mars 2026',total:84,returns:3,ca:8760,byStore:{'GLH-NN07':84},
+    byDay:[{l:'Lu',v:8},{l:'Ma',v:11},{l:'Me',v:9},{l:'Je',v:6},{l:'Ve',v:21},{l:'Sa',v:24},{l:'Di',v:5}],
+    topRefs:[{ref:'1963323487-200-M',qty:5},{ref:'1963323487-003-M',qty:4}],
+    sellThrough:61 },
+};
+const HISTORY = {
+  'les-deux': [
+    {file:'VENTES_23-30_MARS.xls',    type:'ventes',  date:'30 mars 2026',lines:202,status:'ok'},
+    {file:'179683_Delivery_Note.xls', type:'reassort',date:'12 fev 2026', lines:43, status:'partial'},
+    {file:'VENTES_16-22_MARS.xls',    type:'ventes',  date:'23 mars 2026',lines:178,status:'ok'},
+  ],
+  'nn07': [{file:'VENTES_NN07.xls',type:'ventes',date:'30 mars 2026',lines:88,status:'ok'}],
+};
+const MISSING = {
+  'les-deux': [
+    {ref:'1001597-714-ONE',style:'Paisley Tie',colorSize:'Tawny Olive / One size',qty:1},
+    {ref:'100510070-3434-282',style:'Como Suit Pants',colorSize:'Anthrazit / 28/32',qty:1},
+  ],
+  'nn07':[],
+};
+
+let currentUser=null, currentBrand='les-deux', currentPage=null;
+
+function setDemo(role) {
+  document.getElementById('loginEmail').value = role==='admin' ? 'admin@clothette.com' : 'lesdeux@clothette.com';
+  document.getElementById('loginPass').value  = role==='admin' ? 'admin123' : 'lesdeux123';
+}
+
+function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value.trim();
+  const user  = USERS[email];
+  if (!user)            { alert('Email introuvable. Utilisez admin@clothette.com'); return; }
+  if (user.pass!==pass) { alert('Mot de passe incorrect. Utilisez admin123');       return; }
+  currentUser  = { email, ...user };
+  currentBrand = user.role==='brand' ? user.brand : 'les-deux';
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('navRole').textContent   = user.role==='admin' ? 'Administrateur' : 'Marque';
+  document.getElementById('navAvatar').textContent = user.initials;
+  document.getElementById('navCenter').textContent = user.role==='brand' ? user.name : '';
+  renderSidebar();
+  navigateTo('overview');
+}
+
+function doLogout() {
+  currentUser=null;
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('app').style.display='none';
+  document.getElementById('loginEmail').value='';
+  document.getElementById('loginPass').value='';
+}
+
+function renderSidebar() {
+  const isAdmin = currentUser.role==='admin';
+  const pages = [
+    {id:'overview',label:"Vue d'ensemble",icon:'⊞'},
+    {id:'stocks',label:'Stocks',icon:'◫'},
+    {id:'depot',label:'Dépôt fichiers',icon:'↓'},
+    {id:'catalogue',label:'Catalogue',icon:'≡'},
+    {id:'historique',label:'Historique',icon:'◷'},
+  ];
+  let html='';
+  if (isAdmin) {
+    html+=`<div class="sidebar-section">Marques</div>`;
+    Object.values(BRANDS).forEach(b=>{
+      html+=`<div class="brand-pill ${currentBrand===b.id?'active':''}" onclick="switchBrand('${b.id}')">
+        <div style="width:8px;height:8px;border-radius:50%;background:${b.color}"></div>${b.name}
+      </div>`;
+    });
+    html+=`<div style="height:0.5px;background:var(--border);margin:.5rem 1.25rem"></div>`;
+  }
+  html+=`<div class="sidebar-section">Navigation</div>`;
+  pages.forEach(p=>{
+    html+=`<div class="sidebar-item ${currentPage===p.id?'active':''}" onclick="navigateTo('${p.id}')">
+      <span style="font-size:12px">${p.icon}</span>${p.label}
+    </div>`;
+  });
+  document.getElementById('sidebar').innerHTML=html;
+}
+
+function switchBrand(id){currentBrand=id;renderSidebar();navigateTo('overview');}
+
+function navigateTo(page) {
+  currentPage=page; renderSidebar();
+  const m=document.getElementById('mainContent');
+  if(page==='overview') m.innerHTML=pageOverview();
+  else if(page==='stocks') m.innerHTML=pageStocks();
+  else if(page==='depot'){m.innerHTML=pageDepot();setTimeout(bindDepot,0);}
+  else if(page==='catalogue'){m.innerHTML=pageCatalogue();setTimeout(bindCatalogue,0);}
+  else if(page==='historique') m.innerHTML=pageHistorique();
+}
+
+function pageOverview(){
+  const b=BRANDS[currentBrand],s=SALES[currentBrand],stocks=STOCKS[currentBrand]||[],missing=MISSING[currentBrand]||[];
+  const ruptures=stocks.filter(r=>(r.glh+(r.glce||0))===0).length;
+  const critiques=stocks.filter(r=>{const t=r.glh+(r.glce||0);return t>0&&t<r.min;}).length;
+  const maxDay=Math.max(...s.byDay.map(d=>d.v));
+  const maxRef=s.topRefs[0]?.qty||1;
+  return `
+  <div class="page-title">Bonjour, ${b.name} 👋</div>
+  <div class="page-sub">Semaine du ${s.week}</div>
+  ${missing.length?`<div class="alert-banner" style="background:var(--warning-bg);border:0.5px solid var(--warning-border);color:var(--warning)">
+    <strong>${missing.length} référence(s) introuvable(s)</strong> — <span style="cursor:pointer;text-decoration:underline" onclick="navigateTo('catalogue')">Résoudre</span>
+  </div>`:''}
+  <div class="metric-row">
+    <div class="metric"><div class="metric-label">Ventes</div><div class="metric-value" style="color:var(--success)">${s.total}</div></div>
+    <div class="metric"><div class="metric-label">Retours</div><div class="metric-value" style="color:var(--danger)">${s.returns}</div></div>
+    <div class="metric"><div class="metric-label">CA TTC</div><div class="metric-value" style="color:var(--info)">${s.ca.toLocaleString('fr-FR')} €</div></div>
+    <div class="metric"><div class="metric-label">Sell-through</div><div class="metric-value">${s.sellThrough}%</div></div>
+    <div class="metric"><div class="metric-label">Ruptures</div><div class="metric-value" style="color:var(--danger)">${ruptures}</div></div>
+    <div class="metric"><div class="metric-label">Critiques</div><div class="metric-value" style="color:var(--warning)">${critiques}</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-title">Ventes par jour</div>
+      <div style="display:flex;align-items:flex-end;gap:5px;height:80px;margin-bottom:6px">
+        ${s.byDay.map(d=>{const pct=Math.round(d.v/maxDay*100);const we=d.l==='Sa'||d.l==='Di';
+          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+            <div style="font-size:10px;color:var(--muted)">${d.v}</div>
+            <div style="width:100%;height:${pct}%;border-radius:3px 3px 0 0;background:${we?b.color:'#B5D4F4'}"></div>
+          </div>`;}).join('')}
+      </div>
+      <div style="display:flex;gap:5px">${s.byDay.map(d=>`<div style="flex:1;text-align:center;font-size:10px;color:var(--muted)">${d.l}</div>`).join('')}</div>
+    </div>
+    <div class="card"><div class="card-title">Par point de vente</div>
+      ${Object.entries(s.byStore).map(([store,qty])=>{const pct=Math.round(qty/s.total*100);return `
+        <div style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+            <span>${STORES[store]?.label||store}</span><span style="font-weight:500">${qty} (${pct}%)</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${b.color}"></div></div>
+        </div>`;}).join('')}
+    </div>
+  </div>
+  <div class="card"><div class="card-title">Top références</div>
+    ${s.topRefs.map((r,i)=>`
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="font-size:12px;color:var(--muted);min-width:16px">${i+1}.</div>
+        <div style="min-width:150px;font-size:12px;font-family:monospace">${r.ref}</div>
+        <div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+          <div style="width:${Math.round(r.qty/maxRef*100)}%;height:100%;background:${b.color};border-radius:3px"></div>
+        </div>
+        <div style="font-size:12px;font-weight:500;min-width:20px;text-align:right">${r.qty}</div>
+      </div>`).join('')}
+  </div>`;
+}
+
+function pageStocks(){
+  const b=BRANDS[currentBrand],hasGLCE=b.stores.includes('GLCE'),stocks=STOCKS[currentBrand]||[];
+  return `
+  <div class="page-title">Stocks — ${b.name}</div>
+  <div class="page-sub">Vue en temps réel · ${b.stores.map(s=>STORES[s].label).join(' + ')}</div>
+  <div class="search-bar">
+    <input class="search-input" id="sSearch" placeholder="Rechercher..." oninput="filterS()">
+    <select class="filter-select" id="sCat" onchange="filterS()">
+      <option value="">Toutes catégories</option>
+      ${[...new Set(stocks.map(s=>s.cat))].map(c=>`<option>${c}</option>`).join('')}
+    </select>
+    <select class="filter-select" id="sStatus" onchange="filterS()">
+      <option value="">Tous statuts</option>
+      <option value="ok">En stock</option><option value="warn">Critique</option><option value="danger">Rupture</option>
+    </select>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th style="width:22%">Référence</th><th style="width:26%">Article</th>
+      <th style="width:8%">Taille</th><th style="width:11%">Cat.</th>
+      <th style="width:11%">GLH</th>${hasGLCE?`<th style="width:11%">GLCE</th>`:''}
+      <th>Statut</th>
+    </tr></thead>
+    <tbody id="stocksTbody">${renderStocksRows(stocks,hasGLCE)}</tbody>
+  </table></div>`;
+}
+
+function renderStocksRows(data,hasGLCE){
+  if(!data.length) return `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">Aucun résultat</td></tr>`;
+  return data.map(r=>{
+    const total=r.glh+(hasGLCE?r.glce:0);
+    const st=total===0?'danger':total<r.min?'warn':'ok';
+    const gc=v=>v===0?'var(--danger)':v<r.min?'var(--warning)':'var(--ink)';
+    return `<tr>
+      <td class="mono">${r.ref}</td><td style="color:var(--muted)">${r.style}</td>
+      <td>${r.size}</td><td><span class="badge badge-accent" style="font-size:10px">${r.cat}</span></td>
+      <td style="font-weight:500;color:${gc(r.glh)}">${r.glh}</td>
+      ${hasGLCE?`<td style="font-weight:500;color:${gc(r.glce)}">${r.glce}</td>`:''}
+      <td><span class="badge badge-${st}">${st==='ok'?'En stock':st==='warn'?'Critique':'Rupture'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterS(){
+  const b=BRANDS[currentBrand],hasGLCE=b.stores.includes('GLCE');
+  const search=document.getElementById('sSearch')?.value.toLowerCase()||'';
+  const cat=document.getElementById('sCat')?.value||'';
+  const status=document.getElementById('sStatus')?.value||'';
+  let data=STOCKS[currentBrand]||[];
+  if(search) data=data.filter(r=>r.ref.toLowerCase().includes(search)||r.style.toLowerCase().includes(search));
+  if(cat) data=data.filter(r=>r.cat===cat);
+  if(status) data=data.filter(r=>{const t=r.glh+(hasGLCE?r.glce:0);return(t===0?'danger':t<r.min?'warn':'ok')===status;});
+  const tb=document.getElementById('stocksTbody');
+  if(tb) tb.innerHTML=renderStocksRows(data,hasGLCE);
+}
+
+function pageDepot(){
+  const h=HISTORY[currentBrand]||[];
+  return `
+  <div class="page-title">Dépôt de fichiers</div>
+  <div class="page-sub">Déposez vos fichiers — traitement automatique</div>
+  <div class="grid2">
+    <div><div class="section-label" style="margin-top:0">Fichier de ventes</div>
+      <div class="drop-zone-sm" onclick="document.getElementById('inVentes').click()">
+        <div style="font-size:22px;opacity:.4;margin-bottom:6px">↓</div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:3px">Glisser ou cliquer</div>
+        <div style="font-size:12px;color:var(--muted)">Export GL ticketing · .xls/.xlsx</div>
+        <input type="file" id="inVentes" accept=".xls,.xlsx" style="display:none">
+      </div>
+    </div>
+    <div><div class="section-label" style="margin-top:0">Bon de livraison réassort</div>
+      <div class="drop-zone-sm" onclick="document.getElementById('inReassort').click()">
+        <div style="font-size:22px;opacity:.4;margin-bottom:6px">↑</div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:3px">Glisser ou cliquer</div>
+        <div style="font-size:12px;color:var(--muted)">Delivery Note B2B · .xls/.xlsx</div>
+        <input type="file" id="inReassort" accept=".xls,.xlsx" style="display:none">
+      </div>
+    </div>
+  </div>
+  <div id="depotFeedback"></div>
+  <div class="section-label">Fichiers récents</div>
+  <div class="card" style="padding:0">
+    ${h.map(f=>`<div class="file-row">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="file-icon" style="background:${f.type==='ventes'?'var(--info-bg)':'var(--accent-light)'};color:${f.type==='ventes'?'var(--info)':'var(--accent-text)'}">XLS</div>
+        <div><div style="font-size:13px;font-weight:500">${f.file}</div>
+        <div style="font-size:11px;color:var(--muted)">${f.date} · ${f.lines} lignes</div></div>
+      </div>
+      <span class="badge badge-${f.status==='ok'?'ok':'warn'}">${f.status==='ok'?'importé':'partiel'}</span>
+    </div>`).join('')}
+  </div>`;
+}
+
+function bindDepot(){
+  const iv=document.getElementById('inVentes');
+  const ir=document.getElementById('inReassort');
+  if(iv) iv.addEventListener('change',e=>showDepotFb(e.target.files[0],'ventes'));
+  if(ir) ir.addEventListener('change',e=>showDepotFb(e.target.files[0],'reassort'));
+}
+
+function showDepotFb(file,type){
+  if(!file) return;
+  document.getElementById('depotFeedback').innerHTML=`
+    <div class="alert-banner" style="background:var(--success-bg);border:0.5px solid var(--success-border);color:var(--success);margin-top:.5rem">
+      <strong>Fichier reçu : ${file.name}</strong><br>
+      <span style="font-size:12px">Traitement en cours — les stocks seront mis à jour.</span>
+    </div>`;
+}
+
+function pageCatalogue(){
+  const missing=MISSING[currentBrand]||[];
+  return `
+  <div class="page-title">Catalogue produits</div>
+  <div class="page-sub">3 895 références · mis à jour le 16 janv. 2026</div>
+  <div class="section-label" style="margin-top:0">Collections actives</div>
+  <div class="collection-card" style="border-left:3px solid var(--accent)">
+    <div><div style="font-size:13px;font-weight:500">AW25 — Automne Hiver 2025</div>
+    <div style="font-size:12px;color:var(--muted)">2 847 références</div></div>
+    <span class="badge badge-ok">actif</span>
+  </div>
+  <div class="collection-card">
+    <div><div style="font-size:13px;font-weight:500">SS26 — Printemps Été 2026</div>
+    <div style="font-size:12px;color:var(--muted)">1 048 références</div></div>
+    <span class="badge badge-info">nouveau</span>
+  </div>
+  <div class="section-label">Ajouter une collection</div>
+  <div class="drop-zone" onclick="document.getElementById('inCat').click()">
+    <div style="font-size:22px;opacity:.35;margin-bottom:8px">↑</div>
+    <div style="font-size:14px;font-weight:500;margin-bottom:.3rem">Glissez le catalogue</div>
+    <div style="font-size:12px;color:var(--muted)">.xlsx · Season, Style no., Style, Color, Color Code, Size, Category, EAN</div>
+    <input type="file" id="inCat" accept=".xlsx,.xls" style="display:none">
+  </div>
+  <div id="catFeedback"></div>
+  ${missing.length?`
+  <div class="section-label">Références introuvables (${missing.length})</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Référence</th><th>Article</th><th>Couleur / Taille</th><th>Qté</th><th></th></tr></thead>
+    <tbody>${missing.map((r,i)=>`<tr>
+      <td class="mono">${r.ref}</td><td style="color:var(--muted)">${r.style}</td>
+      <td style="color:var(--muted);font-size:12px">${r.colorSize}</td>
+      <td style="font-weight:500">${r.qty}</td>
+      <td><button class="btn btn-sm" onclick="resolveRef(${i})">Résoudre</button></td>
+    </tr>`).join('')}</tbody>
+  </table></div>`:`
+  <div class="alert-banner" style="background:var(--success-bg);border:0.5px solid var(--success-border);color:var(--success);margin-top:1rem">Toutes les références sont à jour ✓</div>`}`;
+}
+
+function bindCatalogue(){
+  const ic=document.getElementById('inCat');
+  if(ic) ic.addEventListener('change',e=>{
+    if(!e.target.files[0]) return;
+    document.getElementById('catFeedback').innerHTML=`
+      <div class="alert-banner" style="background:var(--success-bg);border:0.5px solid var(--success-border);color:var(--success);margin-top:.75rem">
+        <strong>Catalogue reçu : ${e.target.files[0].name}</strong>
+      </div>`;
+  });
+}
+
+function resolveRef(i){MISSING[currentBrand].splice(i,1);navigateTo('catalogue');}
+
+function pageHistorique(){
+  const h=HISTORY[currentBrand]||[];
+  return `
+  <div class="page-title">Historique des imports</div>
+  <div class="page-sub">${h.length} imports enregistrés</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Fichier</th><th>Type</th><th>Date</th><th>Lignes</th><th>Statut</th></tr></thead>
+    <tbody>${h.map(f=>`<tr>
+      <td style="font-size:12px">${f.file}</td>
+      <td><span class="badge badge-${f.type==='ventes'?'info':'accent'}">${f.type}</span></td>
+      <td style="color:var(--muted);font-size:12px">${f.date}</td>
+      <td>${f.lines}</td>
+      <td><span class="badge badge-${f.status==='ok'?'ok':'warn'}">${f.status==='ok'?'OK':'Partiel'}</span></td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+</script>
 </body>
 </html>
