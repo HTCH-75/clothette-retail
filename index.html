@@ -620,10 +620,10 @@ function pageBrandGlobal() {
           <span class="badge" style="background:${sp.colorLight};color:${sp.colorText};margin-left:auto">${sp.store}</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div><div style="font-size:11px;color:var(--muted)">Ventes</div><div style="font-size:20px;font-weight:500;color:var(--success)">${s.total||0}</div></div>
-          <div><div style="font-size:11px;color:var(--muted)">CA TTC</div><div style="font-size:15px;font-weight:500;color:var(--info)">${(s.ca||0).toLocaleString('fr-FR')} €</div></div>
-          <div><div style="font-size:11px;color:var(--muted)">Sell-through</div><div style="font-size:20px;font-weight:500">${s.sellThrough||0}%</div></div>
-          <div><div style="font-size:11px;color:var(--muted)">Ruptures</div><div style="font-size:20px;font-weight:500;color:${rups>0?'var(--danger)':'var(--success)'}">${rups}</div></div>
+          <div><div style="font-size:11px;color:var(--text2)">Ventes</div><div style="font-size:20px;font-weight:500;color:var(--success)">${s.total||0}</div></div>
+          <div><div style="font-size:11px;color:var(--text2)">CA TTC</div><div style="font-size:15px;font-weight:500;color:var(--info)">${(s.ca||0).toLocaleString('fr-FR')} €</div></div>
+          <div><div style="font-size:11px;color:var(--text2)">Sell-through</div><div style="font-size:20px;font-weight:500">${s.sellThrough||0}%</div></div>
+          <div><div style="font-size:11px;color:var(--text2)">Ruptures</div><div style="font-size:20px;font-weight:500;color:${rups>0?'var(--danger)':'var(--success)'}">${rups}</div></div>
         </div>
         <div style="margin-top:.85rem;padding-top:.75rem;border-top:0.5px solid var(--border);font-size:12px;color:var(--accent);cursor:pointer" onclick="switchSpace('${sp.id}')">
           Voir le détail →
@@ -647,10 +647,10 @@ function pageBrandGlobal() {
       ${consolidated.map(r=>{
         const total=Object.values(r.stores).reduce((s,q)=>s+q,0);
         const st=total===0?'danger':total<r.min?'warn':'ok';
-        const qc=q=>q===undefined?'<span style="color:var(--border)">—</span>':`<span style="font-weight:500;color:${q===0?'var(--danger)':q<r.min?'var(--warning)':'var(--ink)'}">${q}</span>`;
+        const qc=q=>q===undefined?'<span style="color:var(--border)">—</span>':`<span style="font-weight:500;color:${q===0?'var(--danger)':q<r.min?'var(--warning)':'var(--text)'}">${q}</span>`;
         return `<tr>
           <td class="mono">${r.ref}</td>
-          <td style="color:var(--muted)">${r.style}</td>
+          <td style="color:var(--text2)">${r.style}</td>
           <td>${r.size}</td>
           <td><span class="badge badge-accent" style="font-size:10px">${r.cat}</span></td>
           <td>${qc(r.stores['GLH'])}</td>
@@ -710,10 +710,10 @@ function pageGlobal() {
           <span class="badge" style="background:${sp.colorLight};color:${sp.colorText};margin-left:auto">${sp.storeLabel}</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div><div style="font-size:11px;color:var(--muted)">Ventes</div><div style="font-size:18px;font-weight:500;color:var(--success)">${s.total||0}</div></div>
-          <div><div style="font-size:11px;color:var(--muted)">CA TTC</div><div style="font-size:14px;font-weight:500;color:var(--info)">${(s.ca||0).toLocaleString('fr-FR')} €</div></div>
-          <div><div style="font-size:11px;color:var(--muted)">Sell-through</div><div style="font-size:18px;font-weight:500">${s.sellThrough||0}%</div></div>
-          <div><div style="font-size:11px;color:var(--muted)">Ruptures</div><div style="font-size:18px;font-weight:500;color:${rups>0?'var(--danger)':'var(--success)'}">${rups}</div></div>
+          <div><div style="font-size:11px;color:var(--text2)">Ventes</div><div style="font-size:18px;font-weight:500;color:var(--success)">${s.total||0}</div></div>
+          <div><div style="font-size:11px;color:var(--text2)">CA TTC</div><div style="font-size:14px;font-weight:500;color:var(--info)">${(s.ca||0).toLocaleString('fr-FR')} €</div></div>
+          <div><div style="font-size:11px;color:var(--text2)">Sell-through</div><div style="font-size:18px;font-weight:500">${s.sellThrough||0}%</div></div>
+          <div><div style="font-size:11px;color:var(--text2)">Ruptures</div><div style="font-size:18px;font-weight:500;color:${rups>0?'var(--danger)':'var(--success)'}">${rups}</div></div>
         </div>
       </div>`;
     }).join('')}
@@ -735,10 +735,10 @@ function pageGlobal() {
       ${consolidatedStocks.slice(0,20).map(r=>{
         const total=Object.values(r.stores).reduce((s,q)=>s+q,0);
         const st=total===0?'danger':total<r.min?'warn':'ok';
-        const qc=q=>q===undefined?'<span style="color:var(--border)">—</span>':`<span style="font-weight:500;color:${q===0?'var(--danger)':q<r.min?'var(--warning)':'var(--ink)'}">${q}</span>`;
+        const qc=q=>q===undefined?'<span style="color:var(--border)">—</span>':`<span style="font-weight:500;color:${q===0?'var(--danger)':q<r.min?'var(--warning)':'var(--text)'}">${q}</span>`;
         return `<tr>
           <td class="mono">${r.ref}</td>
-          <td style="color:var(--muted)">${r.style}</td>
+          <td style="color:var(--text2)">${r.style}</td>
           <td>${r.size}</td>
           <td><span class="badge badge-accent" style="font-size:10px">${r.cat}</span></td>
           <td>${qc(r.stores['GLH'])}</td>
@@ -780,16 +780,16 @@ function pageOverview(){
       <div style="display:flex;align-items:flex-end;gap:5px;height:80px;margin-bottom:6px">
         ${s.byDay.map(d=>{const pct=Math.round(d.v/maxDay*100);const we=d.l==='Sa'||d.l==='Di';
           return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
-            <div style="font-size:10px;color:var(--muted)">${d.v}</div>
+            <div style="font-size:10px;color:var(--text2)">${d.v}</div>
             <div style="width:100%;height:${pct}%;border-radius:3px 3px 0 0;background:${we?sp.color:'#B5D4F4'}"></div>
           </div>`;}).join('')}
       </div>
-      <div style="display:flex;gap:5px">${s.byDay.map(d=>`<div style="flex:1;text-align:center;font-size:10px;color:var(--muted)">${d.l}</div>`).join('')}</div>
+      <div style="display:flex;gap:5px">${s.byDay.map(d=>`<div style="flex:1;text-align:center;font-size:10px;color:var(--text2)">${d.l}</div>`).join('')}</div>
     </div>
     <div class="card"><div class="card-title">Top références</div>
       ${s.topRefs.map((r,i)=>`
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-          <div style="font-size:12px;color:var(--muted);min-width:16px">${i+1}.</div>
+          <div style="font-size:12px;color:var(--text2);min-width:16px">${i+1}.</div>
           <div style="min-width:140px;font-size:12px;font-family:monospace">${r.ref}</div>
           <div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden">
             <div style="width:${Math.round(r.qty/maxRef*100)}%;height:100%;background:${sp.color};border-radius:3px"></div>
@@ -831,14 +831,14 @@ function pageStocks(){
 }
 
 function renderStocksRows(data){
-  if(!data.length) return `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">Aucun résultat</td></tr>`;
+  if(!data.length) return `<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:2rem">Aucun résultat</td></tr>`;
   return data.map(r=>{
     const st=r.qty===0?'danger':r.qty<r.min?'warn':'ok';
     return `<tr>
-      <td class="mono">${r.ref}</td><td style="color:var(--muted)">${r.style}</td>
+      <td class="mono">${r.ref}</td><td style="color:var(--text2)">${r.style}</td>
       <td>${r.size}</td><td><span class="badge badge-accent" style="font-size:10px">${r.cat}</span></td>
-      <td style="font-weight:500;color:${r.qty===0?'var(--danger)':r.qty<r.min?'var(--warning)':'var(--ink)'}">${r.qty}</td>
-      <td style="color:var(--muted)">${r.min}</td>
+      <td style="font-weight:500;color:${r.qty===0?'var(--danger)':r.qty<r.min?'var(--warning)':'var(--text)'}">${r.qty}</td>
+      <td style="color:var(--text2)">${r.min}</td>
       <td><span class="badge badge-${st}">${st==='ok'?'En stock':st==='warn'?'Critique':'Rupture'}</span></td>
     </tr>`;
   }).join('');
@@ -870,7 +870,7 @@ function pageDepot(){
       <div class="drop-zone-sm" onclick="document.getElementById('inVentes').click()">
         <div style="font-size:22px;opacity:.4;margin-bottom:6px">↓</div>
         <div style="font-size:13px;font-weight:500;margin-bottom:3px">Glisser ou cliquer</div>
-        <div style="font-size:12px;color:var(--muted)">Export GL ticketing · .xls/.xlsx</div>
+        <div style="font-size:12px;color:var(--text2)">Export GL ticketing · .xls/.xlsx</div>
         <input type="file" id="inVentes" accept=".xls,.xlsx" style="display:none">
       </div>
     </div>
@@ -878,7 +878,7 @@ function pageDepot(){
       <div class="drop-zone-sm" onclick="document.getElementById('inReassort').click()">
         <div style="font-size:22px;opacity:.4;margin-bottom:6px">↑</div>
         <div style="font-size:13px;font-weight:500;margin-bottom:3px">Glisser ou cliquer</div>
-        <div style="font-size:12px;color:var(--muted)">Delivery Note B2B · .xls/.xlsx</div>
+        <div style="font-size:12px;color:var(--text2)">Delivery Note B2B · .xls/.xlsx</div>
         <input type="file" id="inReassort" accept=".xls,.xlsx" style="display:none">
       </div>
     </div>
@@ -890,7 +890,7 @@ function pageDepot(){
       <div style="display:flex;align-items:center;gap:12px">
         <div class="file-icon" style="background:${f.type==='ventes'?'var(--info-bg)':'var(--accent-light)'};color:${f.type==='ventes'?'var(--info)':'var(--accent-text)'}">XLS</div>
         <div><div style="font-size:13px;font-weight:500">${f.file}</div>
-        <div style="font-size:11px;color:var(--muted)">${f.date} · ${f.lines} lignes</div></div>
+        <div style="font-size:11px;color:var(--text2)">${f.date} · ${f.lines} lignes</div></div>
       </div>
       <span class="badge badge-${f.status==='ok'?'ok':'warn'}">${f.status==='ok'?'importé':'partiel'}</span>
     </div>`).join('')}
@@ -925,19 +925,19 @@ function pageCatalogue(){
   <div class="section-label" style="margin-top:0">Collections actives</div>
   <div class="collection-card" style="border-left:3px solid ${sp.color}">
     <div><div style="font-size:13px;font-weight:500">AW25 — Automne Hiver 2025</div>
-    <div style="font-size:12px;color:var(--muted)">2 847 références</div></div>
+    <div style="font-size:12px;color:var(--text2)">2 847 références</div></div>
     <span class="badge badge-ok">actif</span>
   </div>
   <div class="collection-card">
     <div><div style="font-size:13px;font-weight:500">SS26 — Printemps Été 2026</div>
-    <div style="font-size:12px;color:var(--muted)">1 048 références</div></div>
+    <div style="font-size:12px;color:var(--text2)">1 048 références</div></div>
     <span class="badge badge-info">nouveau</span>
   </div>
   <div class="section-label">Ajouter une collection</div>
   <div class="drop-zone" onclick="document.getElementById('inCat').click()">
     <div style="font-size:22px;opacity:.35;margin-bottom:8px">↑</div>
     <div style="font-size:14px;font-weight:500;margin-bottom:.3rem">Glissez le catalogue de la nouvelle collection</div>
-    <div style="font-size:12px;color:var(--muted)">.xlsx · Season, Style no., Style, Color, Color Code, Size, Category, EAN</div>
+    <div style="font-size:12px;color:var(--text2)">.xlsx · Season, Style no., Style, Color, Color Code, Size, Category, EAN</div>
     <input type="file" id="inCat" accept=".xlsx,.xls" style="display:none">
   </div>
   <div id="catFeedback"></div>
@@ -946,8 +946,8 @@ function pageCatalogue(){
   <div class="table-wrap"><table>
     <thead><tr><th>Référence</th><th>Article</th><th>Couleur / Taille</th><th>Qté</th><th></th></tr></thead>
     <tbody>${missing.map((r,i)=>`<tr>
-      <td class="mono">${r.ref}</td><td style="color:var(--muted)">${r.style}</td>
-      <td style="color:var(--muted);font-size:12px">${r.colorSize}</td>
+      <td class="mono">${r.ref}</td><td style="color:var(--text2)">${r.style}</td>
+      <td style="color:var(--text2);font-size:12px">${r.colorSize}</td>
       <td style="font-weight:500">${r.qty}</td>
       <td><button class="btn btn-sm" onclick="resolveRef(${i})">Résoudre</button></td>
     </tr>`).join('')}</tbody>
@@ -982,7 +982,7 @@ function pageHistorique(){
     <tbody>${h.map(f=>`<tr>
       <td style="font-size:12px">${f.file}</td>
       <td><span class="badge badge-${f.type==='ventes'?'info':'accent'}">${f.type}</span></td>
-      <td style="color:var(--muted);font-size:12px">${f.date}</td>
+      <td style="color:var(--text2);font-size:12px">${f.date}</td>
       <td>${f.lines}</td>
       <td><span class="badge badge-${f.status==='ok'?'ok':'warn'}">${f.status==='ok'?'OK':'Partiel'}</span></td>
     </tr>`).join('')}</tbody>
