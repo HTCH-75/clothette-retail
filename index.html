@@ -300,10 +300,14 @@ function renderSidebar() {
   }
 
   if (isBrand && currentUser.spaces && currentUser.spaces.length > 1) {
-    html+=`<div class="sidebar-section">Mes points de vente</div>`;
+    html+=`<div class="sidebar-section">Vue globale</div>
+    <div class="sidebar-item ${currentPage==='brand-global'?'active':''}" onclick="navigateTo('brand-global')">
+      <span style="font-size:12px">⊕</span> Mes deux points de vente
+    </div>
+    <div class="sidebar-section">Mes points de vente</div>`;
     currentUser.spaces.forEach(spaceId => {
       const s = SPACES[spaceId];
-      const isActive = currentSpace === spaceId;
+      const isActive = currentSpace === spaceId && currentPage !== 'brand-global';
       html+=`<div class="brand-pill ${isActive?'active':''}" style="${isActive?`background:${s.colorLight};color:${s.colorText}`:''}" onclick="switchSpace('${spaceId}')">
         <div style="width:8px;height:8px;border-radius:50%;background:${s.color}"></div>
         ${s.storeLabel}
@@ -327,12 +331,99 @@ function switchSpace(id){ currentSpace=id; renderSidebar(); navigateTo('overview
 function navigateTo(page) {
   currentPage=page; renderSidebar();
   const m=document.getElementById('mainContent');
-  if(page==='global')         m.innerHTML=pageGlobal();
-  else if(page==='overview')  m.innerHTML=pageOverview();
-  else if(page==='stocks')    m.innerHTML=pageStocks();
-  else if(page==='depot')     { m.innerHTML=pageDepot(); setTimeout(bindDepot,0); }
-  else if(page==='catalogue') { m.innerHTML=pageCatalogue(); setTimeout(bindCatalogue,0); }
-  else if(page==='historique')m.innerHTML=pageHistorique();
+  if(page==='global')            m.innerHTML=pageGlobal();
+  else if(page==='brand-global') m.innerHTML=pageBrandGlobal();
+  else if(page==='overview')     m.innerHTML=pageOverview();
+  else if(page==='stocks')       m.innerHTML=pageStocks();
+  else if(page==='depot')        { m.innerHTML=pageDepot(); setTimeout(bindDepot,0); }
+  else if(page==='catalogue')    { m.innerHTML=pageCatalogue(); setTimeout(bindCatalogue,0); }
+  else if(page==='historique')   m.innerHTML=pageHistorique();
+}
+
+// ─── BRAND GLOBAL VIEW ───────────────────────────────────────────────────────
+function pageBrandGlobal() {
+  const user = currentUser;
+  const spaces = user.spaces.map(id => SPACES[id]);
+  const sp0 = spaces[0];
+  const totalVentes = spaces.reduce((s,sp)=>s+(SALES[sp.id]?.total||0),0);
+  const totalCA = spaces.reduce((s,sp)=>s+(SALES[sp.id]?.ca||0),0);
+  const totalRetours = spaces.reduce((s,sp)=>s+(SALES[sp.id]?.returns||0),0);
+  const allStocks = {};
+  spaces.forEach(sp => {
+    (STOCKS[sp.id]||[]).forEach(r => {
+      const key = r.ref+'-'+r.size;
+      if (!allStocks[key]) allStocks[key] = { ref:r.ref, style:r.style, size:r.size, cat:r.cat, min:r.min, stores:{} };
+      allStocks[key].stores[sp.store] = r.qty;
+    });
+  });
+  const consolidated = Object.values(allStocks);
+  const ruptures = consolidated.filter(r=>Object.values(r.stores).every(q=>q===0)).length;
+  const critiques = consolidated.filter(r=>{const t=Object.values(r.stores).reduce((s,q)=>s+q,0);return t>0&&t<r.min;}).length;
+  return `
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:.25rem">
+    <div class="page-title">${sp0.brand}</div>
+    <span class="badge" style="background:${sp0.colorLight};color:${sp0.colorText}">Vue consolidée</span>
+  </div>
+  <div class="page-sub">Tous mes points de vente · semaine en cours</div>
+  <div class="metric-row">
+    <div class="metric"><div class="metric-label">Total ventes</div><div class="metric-value" style="color:var(--success)">${totalVentes}</div></div>
+    <div class="metric"><div class="metric-label">CA TTC total</div><div class="metric-value" style="color:var(--info)">${totalCA.toLocaleString('fr-FR')} €</div></div>
+    <div class="metric"><div class="metric-label">Retours</div><div class="metric-value" style="color:var(--danger)">${totalRetours}</div></div>
+    <div class="metric"><div class="metric-label">Ruptures</div><div class="metric-value" style="color:var(--danger)">${ruptures}</div></div>
+    <div class="metric"><div class="metric-label">Critiques</div><div class="metric-value" style="color:var(--warning)">${critiques}</div></div>
+  </div>
+  <div class="grid2">
+    ${spaces.map(sp=>{
+      const s=SALES[sp.id]||{};
+      const stocks=STOCKS[sp.id]||[];
+      const rups=stocks.filter(r=>r.qty===0).length;
+      return `<div class="card" style="cursor:pointer;border-left:3px solid ${sp.color}" onclick="switchSpace('${sp.id}')">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:.75rem">
+          <div style="font-size:13px;font-weight:500">${sp.storeLabel}</div>
+          <span class="badge" style="background:${sp.colorLight};color:${sp.colorText};margin-left:auto">${sp.store}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div><div style="font-size:11px;color:var(--muted)">Ventes</div><div style="font-size:20px;font-weight:500;color:var(--success)">${s.total||0}</div></div>
+          <div><div style="font-size:11px;color:var(--muted)">CA TTC</div><div style="font-size:15px;font-weight:500;color:var(--info)">${(s.ca||0).toLocaleString('fr-FR')} €</div></div>
+          <div><div style="font-size:11px;color:var(--muted)">Sell-through</div><div style="font-size:20px;font-weight:500">${s.sellThrough||0}%</div></div>
+          <div><div style="font-size:11px;color:var(--muted)">Ruptures</div><div style="font-size:20px;font-weight:500;color:${rups>0?'var(--danger)':'var(--success)'}">${rups}</div></div>
+        </div>
+        <div style="margin-top:.85rem;padding-top:.75rem;border-top:0.5px solid var(--border);font-size:12px;color:var(--accent);cursor:pointer" onclick="switchSpace('${sp.id}')">
+          Voir le détail →
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+  <div class="section-label">Stock consolidé GLH + GLCE</div>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th style="width:22%">Référence</th>
+      <th style="width:25%">Article</th>
+      <th style="width:8%">Taille</th>
+      <th style="width:10%">Cat.</th>
+      <th style="width:10%">GLH</th>
+      <th style="width:10%">GLCE</th>
+      <th style="width:8%">Total</th>
+      <th>Statut</th>
+    </tr></thead>
+    <tbody>
+      ${consolidated.map(r=>{
+        const total=Object.values(r.stores).reduce((s,q)=>s+q,0);
+        const st=total===0?'danger':total<r.min?'warn':'ok';
+        const qc=q=>q===undefined?'<span style="color:var(--border)">—</span>':`<span style="font-weight:500;color:${q===0?'var(--danger)':q<r.min?'var(--warning)':'var(--ink)'}">${q}</span>`;
+        return `<tr>
+          <td class="mono">${r.ref}</td>
+          <td style="color:var(--muted)">${r.style}</td>
+          <td>${r.size}</td>
+          <td><span class="badge badge-accent" style="font-size:10px">${r.cat}</span></td>
+          <td>${qc(r.stores['GLH'])}</td>
+          <td>${qc(r.stores['GLCE'])}</td>
+          <td style="font-weight:500">${total}</td>
+          <td><span class="badge badge-${st}">${st==='ok'?'En stock':st==='warn'?'Critique':'Rupture'}</span></td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table></div>`;
 }
 
 // ─── GLOBAL VIEW ─────────────────────────────────────────────────────────────
