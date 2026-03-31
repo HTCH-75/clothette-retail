@@ -186,6 +186,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 const SUPA_URL = 'https://iqimndaucedbgavbtlen.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxaW1uZGF1Y2VkYmdhdmJ0bGVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NTE2NzgsImV4cCI6MjA5MDUyNzY3OH0.WayuEccuTsdzmIYl-0MZmDPGDckWEtqyHI-ZEu0rtKE';
@@ -284,6 +285,33 @@ const MISSING = {
   'nn07-glh':      [],
 };
 
+
+// ─── SEASONS DATA ─────────────────────────────────────────────────────────────
+const SEASONS = {
+  'les-deux-glh': [
+    { name:'26 SS',         refs:2413, color:'#2E6B4A', qty:0, sales:0, sellThrough:0 },
+    { name:'25 AUTUMN',     refs:888,  color:'#2A5A8A', qty:0, sales:0, sellThrough:0 },
+    { name:'NOOS',          refs:687,  color:'#4A4A4A', qty:0, sales:0, sellThrough:0 },
+    { name:'26 PRE SPRING', refs:609,  color:'#8A6420', qty:0, sales:0, sellThrough:0 },
+    { name:'25 PRE AUTUMN', refs:96,   color:'#6A3A3A', qty:0, sales:0, sellThrough:0 },
+    { name:'SS25',          refs:49,   color:'#3A6A5A', qty:0, sales:0, sellThrough:0 },
+    { name:'RESIDENCE',     refs:32,   color:'#5A4A6A', qty:0, sales:0, sellThrough:0 },
+  ],
+  'les-deux-glce': [
+    { name:'26 SS',         refs:2413, color:'#2E6B4A', qty:0, sales:0, sellThrough:0 },
+    { name:'25 AUTUMN',     refs:888,  color:'#2A5A8A', qty:0, sales:0, sellThrough:0 },
+    { name:'NOOS',          refs:687,  color:'#4A4A4A', qty:0, sales:0, sellThrough:0 },
+    { name:'26 PRE SPRING', refs:609,  color:'#8A6420', qty:0, sales:0, sellThrough:0 },
+    { name:'25 PRE AUTUMN', refs:96,   color:'#6A3A3A', qty:0, sales:0, sellThrough:0 },
+    { name:'SS25',          refs:49,   color:'#3A6A5A', qty:0, sales:0, sellThrough:0 },
+    { name:'RESIDENCE',     refs:32,   color:'#5A4A6A', qty:0, sales:0, sellThrough:0 },
+  ],
+  'nn07-glh': [
+    { name:'NOOS', refs:0, color:'#4A4A4A', qty:0, sales:0, sellThrough:0 },
+    { name:'AW25', refs:0, color:'#2A5A8A', qty:0, sales:0, sellThrough:0 },
+    { name:'SS26', refs:0, color:'#2E6B4A', qty:0, sales:0, sellThrough:0 },
+  ],
+};
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let currentUser=null, currentSpace='les-deux-glh', currentPage=null;
 
@@ -392,9 +420,9 @@ function switchSpace(id){ currentSpace=id; renderSidebar(); navigateTo('overview
 function navigateTo(page) {
   currentPage=page; renderSidebar();
   const m=document.getElementById('mainContent');
-  if(page==='global')            m.innerHTML=pageGlobal();
+  if(page==='global')            { m.innerHTML=pageGlobal(); setTimeout(initGlobalChart,0); }
   else if(page==='brand-global') m.innerHTML=pageBrandGlobal();
-  else if(page==='overview')     m.innerHTML=pageOverview();
+  else if(page==='overview')     { m.innerHTML=pageOverview(); setTimeout(initSalesChart,0); }
   else if(page==='stocks')    m.innerHTML=pageStocks();
   else if(page==='depot')        { m.innerHTML=pageDepot(); setTimeout(bindDepot,0); }
   else if(page==='catalogue')    { m.innerHTML='<div style="padding:2rem;color:var(--text3)">Chargement...</div>'; pageCatalogueAsync().then(()=>{}); }
@@ -544,6 +572,13 @@ function pageGlobal() {
     }).join('')}
   </div>
 
+  <div class="card" style="margin-bottom:.85rem">
+    <div class="card-title">Ventes hebdomadaires — tous espaces</div>
+    <div style="position:relative;height:200px">
+      <canvas id="globalChart"></canvas>
+    </div>
+  </div>
+
   <div class="section-label">Stock consolidé par référence</div>
   <div class="table-wrap"><table>
     <thead><tr>
@@ -600,29 +635,43 @@ function pageOverview(){
     <div class="metric"><div class="metric-label">Ruptures</div><div class="metric-value" style="color:var(--danger)">${ruptures}</div></div>
     <div class="metric"><div class="metric-label">Critiques</div><div class="metric-value" style="color:var(--warning)">${critiques}</div></div>
   </div>
-  <div class="grid2">
-    <div class="card"><div class="card-title">Ventes par jour</div>
-      <div style="display:flex;align-items:flex-end;gap:5px;height:80px;margin-bottom:6px">
-        ${s.byDay.map(d=>{const pct=Math.round(d.v/maxDay*100);const we=d.l==='Sa'||d.l==='Di';
-          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
-            <div style="font-size:10px;color:var(--text2)">${d.v}</div>
-            <div style="width:100%;height:${pct}%;border-radius:3px 3px 0 0;background:${we?sp.color:'#B5D4F4'}"></div>
-          </div>`;}).join('')}
+  <div class="section-label" style="margin-top:0">Par collection</div>
+  <div class="grid3" id="seasonsGrid">
+    ${(SEASONS[currentSpace]||[]).map(s=>`
+    <div class="card" style="border-top:3px solid ${s.color}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+        <div style="font-size:15px;font-weight:500;color:var(--text)">${s.name}</div>
+        <span class="badge" style="background:var(--bg3);color:var(--text2)">${s.refs ? s.refs.toLocaleString('fr-FR')+' réf.' : s.sellThrough+'% ST'}</span>
       </div>
-      <div style="display:flex;gap:5px">${s.byDay.map(d=>`<div style="flex:1;text-align:center;font-size:10px;color:var(--text2)">${d.l}</div>`).join('')}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.2rem">Stock actuel</div>
+          <div style="font-size:22px;font-weight:200;font-family:var(--font-serif);color:${s.color}">${s.qty}</div></div>
+        <div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.2rem">Ventes saison</div>
+          <div style="font-size:22px;font-weight:200;font-family:var(--font-serif);color:var(--success)">${s.sales}</div></div>
+      </div>
+    </div>`).join('')}
+  </div>
+
+  <div class="card">
+    <div class="card-title">Ventes par jour — semaine en cours</div>
+    <div style="position:relative;height:180px">
+      <canvas id="salesChart"></canvas>
     </div>
-    <div class="card"><div class="card-title">Top références</div>
-      ${s.topRefs.map((r,i)=>`
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-          <div style="font-size:12px;color:var(--text2);min-width:16px">${i+1}.</div>
-          <div style="min-width:140px;font-size:12px;font-family:monospace">${r.ref}</div>
-          <div style="flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden">
-            <div style="width:${Math.round(r.qty/maxRef*100)}%;height:100%;background:${sp.color};border-radius:3px"></div>
-          </div>
-          <div style="font-size:12px;font-weight:500;min-width:20px;text-align:right">${r.qty}</div>
-        </div>`).join('')}
-    </div>
-  </div>`;
+  </div>
+
+  ${s.topRefs.length > 0 ? `
+  <div class="card"><div class="card-title">Top références</div>
+    ${s.topRefs.map((r,i)=>`
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="font-size:12px;color:var(--text2);min-width:16px">${i+1}.</div>
+        <div style="min-width:140px;font-size:12px;font-family:monospace">${r.ref}</div>
+        <div style="flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+          <div style="width:${Math.round(r.qty/maxRef*100)}%;height:100%;background:${sp.color};border-radius:2px"></div>
+        </div>
+        <div style="font-size:12px;font-weight:500;min-width:20px;text-align:right">${r.qty}</div>
+      </div>`).join('')}
+  </div>` : ''}
+  `;
 }
 
 // ─── STOCKS ───────────────────────────────────────────────────────────────────
@@ -1123,6 +1172,96 @@ async function pageHistoriqueAsync() {
       <td><span class="badge badge-${f.status==='ok'?'ok':'warn'}">${f.status==='ok'?'OK':'Partiel'}</span></td>
     </tr>`).join('')}</tbody>
   </table></div>`;
+}
+
+
+// ─── CHART INIT ───────────────────────────────────────────────────────────────
+let salesChartInstance = null;
+function initSalesChart() {
+  const canvas = document.getElementById('salesChart');
+  if (!canvas || typeof Chart === 'undefined') return;
+  const s = SALES[currentSpace];
+  const sp = SPACES[currentSpace];
+  const labels = s.byDay.map(d => d.l);
+  const data = s.byDay.map(d => d.v);
+  const maxV = Math.max(...data, 1);
+  if (salesChartInstance) { salesChartInstance.destroy(); }
+  salesChartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: data.map((v,i) => {
+          const day = labels[i];
+          if (day === 'Sa' || day === 'Di') return sp.color;
+          return sp.color + '55';
+        }),
+        borderColor: 'transparent',
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.raw} vente${ctx.raw > 1 ? 's' : ''}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: { font: { size: 11, family: 'DM Sans' }, color: '#888888' }
+        },
+        y: {
+          grid: { color: '#F0F0F0', drawBorder: false },
+          border: { display: false, dash: [4,4] },
+          ticks: { font: { size: 11, family: 'DM Sans' }, color: '#888888', stepSize: Math.ceil(maxV/5) },
+          min: 0,
+        }
+      }
+    }
+  });
+}
+
+
+function initGlobalChart() {
+  const canvas = document.getElementById('globalChart');
+  if (!canvas || typeof Chart === 'undefined') return;
+  const spaces = Object.values(SPACES);
+  const labels = ['Lu','Ma','Me','Je','Ve','Sa','Di'];
+  const datasets = spaces.map(sp => ({
+    label: sp.brand + ' ' + sp.store,
+    data: (SALES[sp.id]?.byDay || labels.map(()=>0)).map(d => d.v || 0),
+    backgroundColor: sp.color + '88',
+    borderColor: sp.color,
+    borderWidth: 2,
+    borderRadius: 4,
+    borderSkipped: false,
+  }));
+  if (window._globalChart) window._globalChart.destroy();
+  window._globalChart = new Chart(canvas, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size:11, family:'DM Sans' }, color:'#888', padding:16, boxWidth:12 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw} ventes` } }
+      },
+      scales: {
+        x: { grid: { display:false }, border: { display:false }, ticks: { font:{size:11,family:'DM Sans'}, color:'#888' } },
+        y: { grid: { color:'#F0F0F0' }, border: { display:false, dash:[4,4] }, ticks: { font:{size:11,family:'DM Sans'}, color:'#888' }, min:0 }
+      }
+    }
+  });
 }
 
 </script>
