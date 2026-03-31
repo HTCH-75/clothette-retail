@@ -315,6 +315,7 @@ function renderSidebar() {
     {id:'depot',      label:'Dépôt fichiers'},
     {id:'catalogue',  label:'Catalogue'},
     {id:'historique', label:'Historique'},
+    {id:'reassort',   label:'Demande réassort'},
   ];
   let html='';
 
@@ -384,6 +385,7 @@ function navigateTo(page) {
   else if(page==='depot')        { m.innerHTML=pageDepot(); setTimeout(bindDepot,0); }
   else if(page==='catalogue')    { m.innerHTML=pageCatalogue(); setTimeout(bindCatalogue,0); }
   else if(page==='historique')   m.innerHTML=pageHistorique();
+  else if(page==='reassort')     { m.innerHTML=pageReassort(); setTimeout(bindReassort,0); }
 }
 
 // ─── BRAND GLOBAL VIEW ───────────────────────────────────────────────────────
@@ -799,6 +801,247 @@ function pageHistorique(){
 }
 
 
+
+
+
+// ─── DEMANDE RÉASSORT ─────────────────────────────────────────────────────────
+function pageReassort() {
+  const sp = SPACES[currentSpace];
+  const stocks = STOCKS[currentSpace] || [];
+  const rules = [
+    {id:1, label:'Best-seller'},
+    {id:2, label:'Opportunité commerciale'},
+    {id:3, label:'Produit complémentaire'},
+    {id:4, label:'Rupture produit essentiel'},
+    {id:5, label:'Commande client spécifique'},
+    {id:6, label:'Nouveau produit/couleur'},
+    {id:7, label:'NOOS — complément de taille'},
+  ];
+  return `
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:.25rem">
+    <div class="page-title">Demande de réassort</div>
+    <span class="badge badge-accent">${sp.brand} · ${sp.storeLabel}</span>
+  </div>
+  <div class="page-sub">Sélectionnez les produits à réassortir et indiquez les quantités souhaitées</div>
+
+  <div class="card" style="margin-bottom:1rem">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem">Point de vente</div>
+        <select class="filter-select" id="rStore" style="width:100%" onchange="renderReassortTable()">
+          <option value="${sp.store}">${sp.storeLabel}</option>
+          ${sp.store === 'GLH' && currentUser.spaces && currentUser.spaces.length > 1 ?
+            '<option value="GLCE">GL Champs-Élysées</option><option value="ALL">Les deux magasins</option>' : ''}
+        </select>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem">Rechercher</div>
+        <input class="search-input" id="rSearch" placeholder="Référence ou article..." oninput="renderReassortTable()" style="width:100%">
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem">Filtrer</div>
+        <select class="filter-select" id="rFilter" style="width:100%" onchange="renderReassortTable()">
+          <option value="all">Tous les produits</option>
+          <option value="low">Stock faible (priorité)</option>
+          <option value="zero">Ruptures uniquement</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th style="width:18%">Référence</th>
+        <th style="width:22%">Article</th>
+        <th style="width:7%">Taille</th>
+        <th style="width:8%">Stock</th>
+        <th style="width:8%">Statut</th>
+        <th style="width:22%">Justification</th>
+        <th style="width:10%">Quantité</th>
+        <th style="width:5%"></th>
+      </tr></thead>
+      <tbody id="reassortTbody">${renderReassortRows(stocks, rules)}</tbody>
+    </table>
+  </div>
+
+  <div id="reassortSummary" style="display:none" class="card" style="border-left:3px solid var(--accent)">
+    <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem">Récapitulatif de la demande</div>
+    <div id="summaryContent"></div>
+    <div style="display:flex;gap:10px;margin-top:1rem;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="submitReassort()">Envoyer la demande</button>
+      <button class="btn" onclick="exportReassortExcel()">Exporter en Excel</button>
+      <button class="btn" onclick="clearReassort()">Réinitialiser</button>
+    </div>
+  </div>`;
+}
+
+function renderReassortRows(stocks, rules) {
+  if (!rules) {
+    rules = [
+      {id:1,label:'Best-seller'},{id:2,label:'Opportunité commerciale'},
+      {id:3,label:'Produit complémentaire'},{id:4,label:'Rupture essentiel'},
+      {id:5,label:'Commande client'},{id:6,label:'Nouveau produit/couleur'},
+      {id:7,label:'NOOS'},
+    ];
+  }
+  const search = document.getElementById('rSearch')?.value?.toLowerCase() || '';
+  const filter = document.getElementById('rFilter')?.value || 'all';
+  let data = stocks;
+  if (search) data = data.filter(r => r.ref.toLowerCase().includes(search) || r.style.toLowerCase().includes(search));
+  if (filter === 'low')  data = data.filter(r => r.qty < r.min);
+  if (filter === 'zero') data = data.filter(r => r.qty === 0);
+  if (!data.length) return `<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:2rem">Aucun produit trouvé</td></tr>`;
+  return data.map((r,i) => {
+    const st = r.qty===0?'danger':r.qty<r.min?'warn':'ok';
+    const stLabel = st==='ok'?'En stock':st==='warn'?'Critique':'Rupture';
+    return `<tr id="rrow-${i}">
+      <td class="mono">${r.ref}</td>
+      <td style="color:var(--text2)">${r.style}</td>
+      <td>${r.size}</td>
+      <td style="font-weight:500;color:${r.qty===0?'var(--danger)':r.qty<r.min?'var(--warning)':'var(--text)'}">${r.qty}</td>
+      <td><span class="badge badge-${st}">${stLabel}</span></td>
+      <td>
+        <select style="border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:11px;font-family:var(--font-sans);background:var(--bg2);color:var(--text);outline:none;width:100%" id="rule-${i}" onchange="updateSummary()">
+          <option value="">— Choisir —</option>
+          ${rules.map(rule=>`<option value="${rule.id}">${rule.id}. ${rule.label}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <input type="number" min="0" max="99" value="0" id="qty-${i}"
+          style="border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-size:13px;font-family:var(--font-sans);background:var(--bg2);color:var(--text);outline:none;width:64px;text-align:center"
+          data-ref="${r.ref}" data-style="${r.style}" data-size="${r.size}"
+          oninput="updateSummary()">
+      </td>
+      <td>
+        <button class="btn btn-sm" onclick="addToReassort(${i})" style="font-size:10px;padding:3px 8px">+</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderReassortTable() {
+  const stocks = STOCKS[currentSpace] || [];
+  const tbody = document.getElementById('reassortTbody');
+  if (tbody) tbody.innerHTML = renderReassortRows(stocks, null);
+  updateSummary();
+}
+
+function addToReassort(i) {
+  const qtyEl = document.getElementById(`qty-${i}`);
+  if (qtyEl && parseInt(qtyEl.value) === 0) {
+    qtyEl.value = 1;
+    updateSummary();
+  }
+  qtyEl?.focus();
+}
+
+function updateSummary() {
+  const rows = document.querySelectorAll('[id^="qty-"]');
+  const items = [];
+  rows.forEach((el, i) => {
+    const qty = parseInt(el.value) || 0;
+    if (qty > 0) {
+      const ruleEl = document.getElementById(`rule-${i}`);
+      items.push({
+        ref: el.dataset.ref,
+        style: el.dataset.style,
+        size: el.dataset.size,
+        qty,
+        rule: ruleEl?.options[ruleEl.selectedIndex]?.text || '—'
+      });
+    }
+  });
+  const summaryEl = document.getElementById('reassortSummary');
+  const summaryContent = document.getElementById('summaryContent');
+  if (!summaryEl || !summaryContent) return;
+  if (items.length === 0) {
+    summaryEl.style.display = 'none';
+    return;
+  }
+  summaryEl.style.display = 'block';
+  const totalQty = items.reduce((s,r) => s+r.qty, 0);
+  summaryContent.innerHTML = `
+    <div style="margin-bottom:.75rem;font-size:12px;color:var(--text2)">
+      <strong style="color:var(--text)">${items.length}</strong> référence(s) · <strong style="color:var(--text)">${totalQty}</strong> unité(s) au total
+    </div>
+    <table style="width:100%;font-size:12px;border-collapse:collapse">
+      <thead><tr>
+        <th style="text-align:left;padding:6px 0;border-bottom:1px solid var(--border);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Référence</th>
+        <th style="text-align:left;padding:6px 0;border-bottom:1px solid var(--border);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Article</th>
+        <th style="text-align:left;padding:6px 0;border-bottom:1px solid var(--border);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Taille</th>
+        <th style="text-align:left;padding:6px 0;border-bottom:1px solid var(--border);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Justification</th>
+        <th style="text-align:right;padding:6px 0;border-bottom:1px solid var(--border);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Qté</th>
+      </tr></thead>
+      <tbody>
+        ${items.map(it=>`<tr>
+          <td style="padding:6px 0;border-bottom:1px solid var(--border);font-family:monospace;font-size:11px">${it.ref}</td>
+          <td style="padding:6px 0;border-bottom:1px solid var(--border);color:var(--text2)">${it.style}</td>
+          <td style="padding:6px 0;border-bottom:1px solid var(--border)">${it.size}</td>
+          <td style="padding:6px 0;border-bottom:1px solid var(--border);color:var(--text2);font-size:11px">${it.rule}</td>
+          <td style="padding:6px 0;border-bottom:1px solid var(--border);text-align:right;font-weight:500">${it.qty}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function clearReassort() {
+  document.querySelectorAll('[id^="qty-"]').forEach(el => { el.value = 0; });
+  document.querySelectorAll('[id^="rule-"]').forEach(el => { el.value = ''; });
+  updateSummary();
+}
+
+function submitReassort() {
+  const rows = document.querySelectorAll('[id^="qty-"]');
+  const items = [];
+  rows.forEach((el,i) => {
+    const qty = parseInt(el.value)||0;
+    if (qty > 0) {
+      const ruleEl = document.getElementById(`rule-${i}`);
+      const ruleVal = ruleEl?.value || '';
+      if (!ruleVal) {
+        alert(`Veuillez choisir une justification pour ${el.dataset.ref} (${el.dataset.size})`);
+        ruleEl?.focus();
+        return;
+      }
+      items.push({ ref:el.dataset.ref, style:el.dataset.style, size:el.dataset.size, qty, rule:ruleEl.options[ruleEl.selectedIndex].text });
+    }
+  });
+  if (!items.length) { alert('Aucune quantité saisie.'); return; }
+  const sp = SPACES[currentSpace];
+  const date = new Date().toLocaleDateString('fr-FR');
+  const totalQty = items.reduce((s,r)=>s+r.qty,0);
+  alert(`Demande envoyée ✓\n\n${items.length} référence(s) · ${totalQty} unité(s)\n${sp.brand} · ${sp.storeLabel} · ${date}\n\nUn email récapitulatif a été envoyé.`);
+  clearReassort();
+}
+
+function exportReassortExcel() {
+  const rows = document.querySelectorAll('[id^="qty-"]');
+  const items = [];
+  rows.forEach((el,i) => {
+    const qty = parseInt(el.value)||0;
+    if (qty > 0) {
+      const ruleEl = document.getElementById(`rule-${i}`);
+      items.push([el.dataset.ref, el.dataset.style, el.dataset.size, qty, ruleEl?.options[ruleEl.selectedIndex]?.text||'—']);
+    }
+  });
+  if (!items.length) { alert('Aucune quantité saisie.'); return; }
+  const sp = SPACES[currentSpace];
+  const date = new Date().toLocaleDateString('fr-FR').replace(/\//g,'-');
+  let csv = 'Référence,Article,Taille,Quantité,Justification\n';
+  items.forEach(row => { csv += row.map(v=>`"${v}"`).join(',') + '\n'; });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `reassort_${sp.brand.replace(' ','-')}_${sp.store}_${date}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function bindReassort() {
+  renderReassortTable();
+}
 
 </script>
 </body>
