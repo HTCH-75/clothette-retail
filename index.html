@@ -191,8 +191,8 @@
 const SUPA_URL = 'https://iqimndaucedbgavbtlen.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxaW1uZGF1Y2VkYmdhdmJ0bGVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NTE2NzgsImV4cCI6MjA5MDUyNzY3OH0.WayuEccuTsdzmIYl-0MZmDPGDckWEtqyHI-ZEu0rtKE';
 let sb = null;
-window.addEventListener('load', () => {
-  if (window.supabase) { sb = window.supabase.createClient(SUPA_URL, SUPA_KEY); console.log('Supabase OK'); }
+window.addEventListener('load', async () => {
+  if (window.supabase) { sb = window.supabase.createClient(SUPA_URL, SUPA_KEY); console.log('Supabase OK'); await initFromDB(); }
 });
 async function loadCatalogueFromDB(brandId, limit=5000) {
   if (!sb) return null;
@@ -215,6 +215,102 @@ async function loadHistoryFromDB(brandId) {
 async function logImportToDB(brandId, fileName, type, total, ok, failed, status) {
   if (!sb) return;
   await sb.from('import_history').insert({brand_id:brandId,file_name:fileName,import_type:type,lines_total:total,lines_ok:ok,lines_failed:failed,status});
+}
+
+// ─── USERS & SPACES DB ────────────────────────────────────────────────────────
+async function loadUsersFromDB() {
+  if (!sb) return null;
+  const {data: users, error} = await sb.from('users').select('*, user_spaces(*)');
+  if (error) { console.error(error); return null; }
+  return users;
+}
+
+async function createUserInDB(email, password, name, role, initials, spaces) {
+  if (!sb) return false;
+  try {
+    const {data: user, error} = await sb.from('users').insert({email, password, name, role, initials}).select().single();
+    if (error) throw error;
+    if (spaces && spaces.length) {
+      const spaceRows = spaces.map(sp => ({
+        user_id: user.id,
+        space_id: sp.id,
+        brand: sp.brand,
+        store: sp.store,
+        store_label: sp.storeLabel,
+        color: sp.color,
+        color_light: sp.colorLight,
+        color_text: sp.colorText
+      }));
+      await sb.from('user_spaces').insert(spaceRows);
+    }
+    return true;
+  } catch(e) { console.error(e); return false; }
+}
+
+async function deleteUserFromDB(email) {
+  if (!sb) return false;
+  const {error} = await sb.from('users').delete().eq('email', email);
+  if (error) { console.error(error); return false; }
+  return true;
+}
+
+async function saveStockItemToDB(spaceId, item) {
+  if (!sb) return false;
+  const {error} = await sb.from('stock_items').upsert({
+    space_id: spaceId,
+    ean: item.ref,
+    ref: item.ref,
+    style_name: item.style,
+    size: item.size,
+    category: item.cat,
+    price: item.price || 0,
+    quantity: item.qty,
+    min_quantity: item.min,
+    reassort_cmd: item.reassortCmd || 0,
+    reassort_recu: item.reassortRecu || 0,
+    comment: item.comment || '',
+    updated_at: new Date()
+  }, {onConflict: 'space_id,ref,size'});
+  if (error) { console.error(error); return false; }
+  return true;
+}
+
+async function loadStockItemsFromDB(spaceId) {
+  if (!sb) return null;
+  const {data, error} = await sb.from('stock_items').select('*').eq('space_id', spaceId);
+  if (error) { console.error(error); return null; }
+  return data;
+}
+
+async function initFromDB() {
+  if (!sb) return;
+  try {
+    const users = await loadUsersFromDB();
+    if (!users) return;
+    users.forEach(u => {
+      if (u.email === 'admin@clothette.com') return;
+      const spaces = u.user_spaces || [];
+      USERS[u.email] = {
+        pass: u.password, role: u.role, name: u.name, initials: u.initials,
+        brand: spaces[0]?.space_id || '',
+        spaces: spaces.map(s => s.space_id)
+      };
+      spaces.forEach(s => {
+        if (!SPACES[s.space_id]) {
+          SPACES[s.space_id] = {
+            id: s.space_id, brand: s.brand, store: s.store, storeLabel: s.store_label,
+            color: s.color, colorLight: s.color_light, colorText: s.color_text
+          };
+          STOCKS[s.space_id]  = [];
+          SALES[s.space_id]   = { week:'—', total:0, returns:0, ca:0, byDay:[{l:'Lu',v:0},{l:'Ma',v:0},{l:'Me',v:0},{l:'Je',v:0},{l:'Ve',v:0},{l:'Sa',v:0},{l:'Di',v:0}], topRefs:[], sellThrough:0 };
+          HISTORY[s.space_id] = [];
+          MISSING[s.space_id] = [];
+          SEASONS[s.space_id] = [];
+        }
+      });
+    });
+    console.log('DB users loaded ✓', Object.keys(USERS).length, 'users');
+  } catch(e) { console.error('initFromDB error:', e); }
 }
 </script>
 
@@ -1538,6 +1634,12 @@ function createUser() {
     initials
   };
 
+  // Save to Supabase
+  const spaceObjects = newSpaces.map(id => SPACES[id]);
+  createUserInDB(email, pass, name, 'brand', initials, spaceObjects).then(ok => {
+    console.log('User saved to DB:', ok);
+  });
+
   fb.innerHTML = `<div class="alert-banner" style="background:var(--success-bg);color:var(--success);border:1px solid var(--success)">
     Compte créé ✓ — ${name} · ${newSpaces.length} espace(s) créé(s)<br>
     <span style="font-size:11px">Email : ${email} · Mot de passe : ${pass}</span>
@@ -1545,9 +1647,11 @@ function createUser() {
 
   // Clear fields
   ['newUserName','newUserEmail','newUserPass'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-  Object.keys(SPACES).filter(id => id !== 'nn07-glh').forEach(id => { const el=document.getElementById('access-'+id); if(el) el.checked=false; });
+  ['les-deux-glh','les-deux-glce','les-deux-printemps','les-deux-citadium','les-deux-bonmarche','les-deux-bhv'].forEach(id => {
+    const el=document.getElementById('access-'+id); if(el) el.checked=false;
+  });
 
-  // Refresh sidebar immediately to show new brand + refresh comptes page
+  // Refresh sidebar immediately
   renderSidebar();
   setTimeout(() => navigateTo('comptes'), 1200);
 }
@@ -1555,10 +1659,8 @@ function createUser() {
 function deleteUser(email) {
   if (!confirm('Supprimer le compte ' + email + ' ?')) return;
   const user = USERS[email];
-  // Supprimer tous les espaces associés à ce compte
   if (user && user.spaces) {
     user.spaces.forEach(spaceId => {
-      // Ne pas supprimer les espaces Les Deux de base
       if (!['les-deux-glh','les-deux-glce'].includes(spaceId)) {
         delete SPACES[spaceId];
         delete STOCKS[spaceId];
@@ -1570,10 +1672,9 @@ function deleteUser(email) {
     });
   }
   delete USERS[email];
-  // Si on était sur un espace supprimé, revenir à GLH
-  if (!SPACES[currentSpace]) {
-    currentSpace = 'les-deux-glh';
-  }
+  // Delete from Supabase
+  deleteUserFromDB(email);
+  if (!SPACES[currentSpace]) currentSpace = 'les-deux-glh';
   renderSidebar();
   navigateTo('comptes');
 }
