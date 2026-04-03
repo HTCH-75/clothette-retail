@@ -1554,7 +1554,27 @@ function createUser() {
 
 function deleteUser(email) {
   if (!confirm('Supprimer le compte ' + email + ' ?')) return;
+  const user = USERS[email];
+  // Supprimer tous les espaces associés à ce compte
+  if (user && user.spaces) {
+    user.spaces.forEach(spaceId => {
+      // Ne pas supprimer les espaces Les Deux de base
+      if (!['les-deux-glh','les-deux-glce'].includes(spaceId)) {
+        delete SPACES[spaceId];
+        delete STOCKS[spaceId];
+        delete SALES[spaceId];
+        delete HISTORY[spaceId];
+        delete MISSING[spaceId];
+        delete SEASONS[spaceId];
+      }
+    });
+  }
   delete USERS[email];
+  // Si on était sur un espace supprimé, revenir à GLH
+  if (!SPACES[currentSpace]) {
+    currentSpace = 'les-deux-glh';
+  }
+  renderSidebar();
   navigateTo('comptes');
 }
 
