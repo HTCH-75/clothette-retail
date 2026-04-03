@@ -1517,16 +1517,24 @@ function createUser() {
   
   // Create a new SPACE for each selected store with the brand name
   const brandId = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  const storeMap = {
+    'les-deux-glh':       {store:'GLH',   storeLabel:'GL Haussmann'},
+    'les-deux-glce':      {store:'GLCE',  storeLabel:'GL Champs-Élysées'},
+    'les-deux-printemps': {store:'PRT',   storeLabel:'Printemps'},
+    'les-deux-citadium':  {store:'CTD',   storeLabel:'Citadium'},
+    'les-deux-bonmarche': {store:'BM',    storeLabel:'Bon Marché'},
+    'les-deux-bhv':       {store:'BHV',   storeLabel:'BHV'},
+  };
   const newSpaces = [];
   spaces.forEach(storeSpaceId => {
-    const baseSpace = SPACES[storeSpaceId];
-    if (!baseSpace) return;
-    const newSpaceId = brandId + '-' + baseSpace.store.toLowerCase().replace(/\s+/g,'-');
+    const storeInfo = storeMap[storeSpaceId];
+    if (!storeInfo) return;
+    const newSpaceId = brandId + '-' + storeInfo.store.toLowerCase();
     SPACES[newSpaceId] = {
       id: newSpaceId,
       brand: name,
-      store: baseSpace.store,
-      storeLabel: baseSpace.storeLabel,
+      store: storeInfo.store,
+      storeLabel: storeInfo.storeLabel,
       color: '#6A7A8A',
       colorLight: '#EEF0F2',
       colorText: '#3A4A5A'
