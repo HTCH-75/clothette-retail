@@ -352,7 +352,13 @@ function renderSidebar() {
   let html='';
 
   if (isAdmin) {
-    html+=`<div class="sidebar-section">Vue globale</div>
+    html+=`<div class="sidebar-section">Administration</div>
+    <div class="sidebar-item ${currentPage==='comptes'?'active':''}" onclick="navigateTo('comptes')">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="flex-shrink:0"><circle cx="6.5" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 11.5c0-2.761 2.239-5 5-5s5 2.239 5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Gestion des comptes
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">Vue globale</div>
     <div class="sidebar-item ${currentPage==='global'?'active':''}" onclick="navigateTo('global')">
       <span style="font-size:12px">⊕</span> Stock consolidé
     </div>
