@@ -1447,11 +1447,18 @@ function pageComptes() {
       <div class="form-field" style="margin-bottom:.85rem">
         <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.35rem">Accès aux espaces</label>
         <div style="display:flex;flex-direction:column;gap:6px;margin-top:.3rem">
-          ${Object.entries(SPACES).filter(([id]) => id !== 'nn07-glh').map(([id, sp]) => `
+          ${[
+            {id:'les-deux-glh',       label:'GL Haussmann'},
+            {id:'les-deux-glce',      label:'GL Champs-Élysées'},
+            {id:'les-deux-printemps', label:'Printemps'},
+            {id:'les-deux-citadium',  label:'Citadium'},
+            {id:'les-deux-bonmarche', label:'Bon Marché'},
+            {id:'les-deux-bhv',       label:'BHV'},
+          ].map(s => `
           <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-            <input type="checkbox" id="access-${id}" style="width:14px;height:14px;cursor:pointer">
-            <div style="width:8px;height:8px;border-radius:50%;background:${sp.color}"></div>
-            ${sp.storeLabel}
+            <input type="checkbox" id="access-${s.id}" style="width:14px;height:14px;cursor:pointer">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--accent)"></div>
+            ${s.label}
           </label>`).join('')}
         </div>
       </div>
@@ -1558,6 +1565,28 @@ function deleteUser(email) {
   if (!confirm('Supprimer le compte ' + email + ' ?')) return;
   delete USERS[email];
   navigateTo('comptes');
+}
+
+
+function buildDynamicBrandsHTML() {
+  const fixedPrefixes = ['les-deux', 'nn07'];
+  const dynamicSpaces = Object.entries(SPACES).filter(([id]) => !fixedPrefixes.some(p => id.startsWith(p)));
+  if (!dynamicSpaces.length) return '';
+  const brands = {};
+  dynamicSpaces.forEach(([id, sp]) => {
+    if (!brands[sp.brand]) brands[sp.brand] = [];
+    brands[sp.brand].push([id, sp]);
+  });
+  return Object.entries(brands).map(([brand, spaceList]) => {
+    const pills = spaceList.map(([id, sp]) => {
+      const isActive = currentSpace === id;
+      return '<div class="brand-pill ' + (isActive?'active':'') + '" style="' + (isActive?'background:'+sp.colorLight+';color:'+sp.colorText:'') + '" onclick="switchSpace(\'' + id + '\')">' +
+        '<div style="width:8px;height:8px;border-radius:50%;background:' + sp.color + '"></div>' +
+        sp.storeLabel +
+        '</div>';
+    }).join('');
+    return '<div class="sidebar-section">' + brand + '</div>' + pills + '<div class="sidebar-divider"></div>';
+  }).join('');
 }
 
 </script>
