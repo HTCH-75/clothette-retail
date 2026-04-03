@@ -222,65 +222,39 @@ async function logImportToDB(brandId, fileName, type, total, ok, failed, status)
 
 const USERS = {
   'admin@clothette.com':   { pass:'admin123',   role:'admin', name:'Admin',          initials:'CR' },
-  'lesdeux@clothette.com': { pass:'lesdeux123', role:'brand', brand:'les-deux-glh', spaces:['les-deux-glh','les-deux-glce','les-deux-printemps','les-deux-citadium','les-deux-bonmarche','les-deux-bhv'], name:'Les Deux France', initials:'LD' },
-  'nn07@clothette.com':    { pass:'nn07123',    role:'brand', brand:'nn07',          name:'NN07',            initials:'N7' },
+  'lesdeux@clothette.com': { pass:'lesdeux123', role:'brand', brand:'les-deux-glh', spaces:['les-deux-glh','les-deux-glce'], name:'Les Deux France', initials:'LD' },
 };
 
 // Espaces de travail — chaque espace = une marque + un point de vente
 const SPACES = {
-  'les-deux-glh':       { id:'les-deux-glh',       brand:'Les Deux', store:'GLH',        storeLabel:'GL Haussmann',      color:'#8A7A6E', colorLight:'#F0EDE8', colorText:'#4A3F38' },
-  'les-deux-glce':      { id:'les-deux-glce',      brand:'Les Deux', store:'GLCE',       storeLabel:'GL Champs-Élysées', color:'#8A7A6E', colorLight:'#F0EDE8', colorText:'#4A3F38' },
-  'les-deux-printemps': { id:'les-deux-printemps', brand:'Les Deux', store:'PRT', storeLabel:'Printemps',         color:'#8A7A6E', colorLight:'#F0EDE8', colorText:'#4A3F38' },
-  'les-deux-citadium':  { id:'les-deux-citadium',  brand:'Les Deux', store:'CTD', storeLabel:'Citadium',          color:'#8A7A6E', colorLight:'#F0EDE8', colorText:'#4A3F38' },
-  'les-deux-bonmarche': { id:'les-deux-bonmarche', brand:'Les Deux', store:'BM', storeLabel:'Bon Marché',        color:'#8A7A6E', colorLight:'#F0EDE8', colorText:'#4A3F38' },
-  'les-deux-bhv':       { id:'les-deux-bhv',       brand:'Les Deux', store:'BHV',        storeLabel:'BHV',               color:'#8A7A6E', colorLight:'#F0EDE8', colorText:'#4A3F38' },
-  'nn07-glh':           { id:'nn07-glh',           brand:'NN07',     store:'GLH',        storeLabel:'GL Haussmann',      color:'#5A7A5A', colorLight:'#EDF2ED', colorText:'#2E4A2E' },
+  'les-deux-glh':  { id:'les-deux-glh',  brand:'Les Deux', store:'GLH',  storeLabel:'GL Haussmann',      color:'#8A7A6E', colorLight:'#F0EDE8', colorText:'#4A3F38' },
+  'les-deux-glce': { id:'les-deux-glce', brand:'Les Deux', store:'GLCE', storeLabel:'GL Champs-Élysées', color:'#8A7A6E', colorLight:'#F0EDE8', colorText:'#4A3F38' },
 };
 
 const STOCKS = {
-  'les-deux-glh':       [],
-  'les-deux-glce':      [],
-  'les-deux-printemps': [],
-  'les-deux-citadium':  [],
-  'les-deux-bonmarche': [],
-  'les-deux-bhv':       [],
-  'nn07-glh':           [],
+  'les-deux-glh':  [],
+  'les-deux-glce': [],
 };
 
 const SALES = {
-  'les-deux-glh':       { week:'—', total:0, returns:0, ca:0, byDay:[{l:'Lu',v:0},{l:'Ma',v:0},{l:'Me',v:0},{l:'Je',v:0},{l:'Ve',v:0},{l:'Sa',v:0},{l:'Di',v:0}], topRefs:[], sellThrough:0 },
-  'les-deux-glce':      { week:'—', total:0, returns:0, ca:0, byDay:[{l:'Lu',v:0},{l:'Ma',v:0},{l:'Me',v:0},{l:'Je',v:0},{l:'Ve',v:0},{l:'Sa',v:0},{l:'Di',v:0}], topRefs:[], sellThrough:0 },
-  'les-deux-printemps': { week:'—', total:0, returns:0, ca:0, byDay:[{l:'Lu',v:0},{l:'Ma',v:0},{l:'Me',v:0},{l:'Je',v:0},{l:'Ve',v:0},{l:'Sa',v:0},{l:'Di',v:0}], topRefs:[], sellThrough:0 },
-  'les-deux-citadium':  { week:'—', total:0, returns:0, ca:0, byDay:[{l:'Lu',v:0},{l:'Ma',v:0},{l:'Me',v:0},{l:'Je',v:0},{l:'Ve',v:0},{l:'Sa',v:0},{l:'Di',v:0}], topRefs:[], sellThrough:0 },
-  'les-deux-bonmarche': { week:'—', total:0, returns:0, ca:0, byDay:[{l:'Lu',v:0},{l:'Ma',v:0},{l:'Me',v:0},{l:'Je',v:0},{l:'Ve',v:0},{l:'Sa',v:0},{l:'Di',v:0}], topRefs:[], sellThrough:0 },
-  'les-deux-bhv':       { week:'—', total:0, returns:0, ca:0, byDay:[{l:'Lu',v:0},{l:'Ma',v:0},{l:'Me',v:0},{l:'Je',v:0},{l:'Ve',v:0},{l:'Sa',v:0},{l:'Di',v:0}], topRefs:[], sellThrough:0 },
-  'nn07-glh':           { week:'—', total:0, returns:0, ca:0, byDay:[{l:'Lu',v:0},{l:'Ma',v:0},{l:'Me',v:0},{l:'Je',v:0},{l:'Ve',v:0},{l:'Sa',v:0},{l:'Di',v:0}], topRefs:[], sellThrough:0 },
+  'les-deux-glh':  { week:'—', total:0, returns:0, ca:0, byDay:[{l:'Lu',v:0},{l:'Ma',v:0},{l:'Me',v:0},{l:'Je',v:0},{l:'Ve',v:0},{l:'Sa',v:0},{l:'Di',v:0}], topRefs:[], sellThrough:0 },
+  'les-deux-glce': { week:'—', total:0, returns:0, ca:0, byDay:[{l:'Lu',v:0},{l:'Ma',v:0},{l:'Me',v:0},{l:'Je',v:0},{l:'Ve',v:0},{l:'Sa',v:0},{l:'Di',v:0}], topRefs:[], sellThrough:0 },
 };
 
 const HISTORY = {
-  'les-deux-glh':       [],
-  'les-deux-glce':      [],
-  'les-deux-printemps': [],
-  'les-deux-citadium':  [],
-  'les-deux-bonmarche': [],
-  'les-deux-bhv':       [],
-  'nn07-glh':           [],
+  'les-deux-glh':  [],
+  'les-deux-glce': [],
 };
 
 const MISSING = {
-  'les-deux-glh':       [],
-  'les-deux-glce':      [],
-  'les-deux-printemps': [],
-  'les-deux-citadium':  [],
-  'les-deux-bonmarche': [],
-  'les-deux-bhv':       [],
-  'nn07-glh':           [],
+  'les-deux-glh':  [],
+  'les-deux-glce': [],
 };
 
 
 // ─── SEASONS DATA ─────────────────────────────────────────────────────────────
 const SEASONS = {
-  'les-deux-glh': [
+  'les-deux-glh':  [
     { name:'26 SS',         refs:2413, color:'#2E6B4A', qty:0, sales:0, sellThrough:0 },
     { name:'25 AUTUMN',     refs:888,  color:'#2A5A8A', qty:0, sales:0, sellThrough:0 },
     { name:'NOOS',          refs:687,  color:'#4A4A4A', qty:0, sales:0, sellThrough:0 },
@@ -297,11 +271,6 @@ const SEASONS = {
     { name:'25 PRE AUTUMN', refs:96,   color:'#6A3A3A', qty:0, sales:0, sellThrough:0 },
     { name:'SS25',          refs:49,   color:'#3A6A5A', qty:0, sales:0, sellThrough:0 },
     { name:'RESIDENCE',     refs:32,   color:'#5A4A6A', qty:0, sales:0, sellThrough:0 },
-  ],
-  'nn07-glh': [
-    { name:'NOOS', refs:0, color:'#4A4A4A', qty:0, sales:0, sellThrough:0 },
-    { name:'AW25', refs:0, color:'#2A5A8A', qty:0, sales:0, sellThrough:0 },
-    { name:'SS26', refs:0, color:'#2E6B4A', qty:0, sales:0, sellThrough:0 },
   ],
 };
 const LOGOS = {
@@ -393,13 +362,27 @@ function renderSidebar() {
       GL Champs-Élysées
     </div>
     <div class="sidebar-divider"></div>
-    <div class="sidebar-section">NN07</div>
-    <div class="brand-pill ${currentSpace==='nn07-glh'?'active':''}" style="${currentSpace==='nn07-glh'?'background:var(--success-bg);color:var(--success)':''}" onclick="switchSpace('nn07-glh')">
-      <div style="width:8px;height:8px;border-radius:50%;background:#1D9E75"></div>
-      GL Haussmann
-      <span class="store-badge" style="background:var(--success-bg);color:var(--success)">GLH</span>
-    </div>
-    <div class="sidebar-divider"></div>`;
+    ${(() => {
+      const fixedIds = ['les-deux-glh','les-deux-glce'];
+      const dynamicSpaces = Object.entries(SPACES).filter(([id]) => !fixedIds.includes(id));
+      if (!dynamicSpaces.length) return '';
+      const brands = {};
+      dynamicSpaces.forEach(([id, sp]) => {
+        if (!brands[sp.brand]) brands[sp.brand] = [];
+        brands[sp.brand].push([id, sp]);
+      });
+      return Object.entries(brands).map(([brand, spaceList]) => `
+        <div class="sidebar-section">${brand}</div>
+        ${spaceList.map(([id, sp]) => `
+        <div class="brand-pill ${currentSpace===id?'active':''}" style="${currentSpace===id?'background:'+sp.colorLight+';color:'+sp.colorText:''}" onclick="switchSpace('${id}')">
+          <div style="width:8px;height:8px;border-radius:50%;background:${sp.color}"></div>
+          ${sp.storeLabel}
+          <span class="store-badge" style="background:${sp.colorLight};color:${sp.colorText};margin-left:auto">${sp.store}</span>
+        </div>`).join('')}
+        <div class="sidebar-divider"></div>
+      `).join('');
+    })()}
+    \`;
   }
 
   if (isBrand && currentUser.spaces && currentUser.spaces.length > 1) {
