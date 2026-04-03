@@ -230,9 +230,9 @@ const USERS = {
 const SPACES = {
   'les-deux-glh':       { id:'les-deux-glh',       brand:'Les Deux', store:'GLH',        storeLabel:'GL Haussmann',      color:'#8A7A6E', colorLight:'#F0EDE8', colorText:'#4A3F38' },
   'les-deux-glce':      { id:'les-deux-glce',      brand:'Les Deux', store:'GLCE',       storeLabel:'GL Champs-Élysées', color:'#8A7A6E', colorLight:'#F0EDE8', colorText:'#4A3F38' },
-  'les-deux-printemps': { id:'les-deux-printemps', brand:'Les Deux', store:'PRINTEMPS',  storeLabel:'Printemps',         color:'#8A7A6E', colorLight:'#F0EDE8', colorText:'#4A3F38' },
-  'les-deux-citadium':  { id:'les-deux-citadium',  brand:'Les Deux', store:'CITADIUM',   storeLabel:'Citadium',          color:'#8A7A6E', colorLight:'#F0EDE8', colorText:'#4A3F38' },
-  'les-deux-bonmarche': { id:'les-deux-bonmarche', brand:'Les Deux', store:'BON MARCHÉ', storeLabel:'Bon Marché',        color:'#8A7A6E', colorLight:'#F0EDE8', colorText:'#4A3F38' },
+  'les-deux-printemps': { id:'les-deux-printemps', brand:'Les Deux', store:'PRT', storeLabel:'Printemps',         color:'#8A7A6E', colorLight:'#F0EDE8', colorText:'#4A3F38' },
+  'les-deux-citadium':  { id:'les-deux-citadium',  brand:'Les Deux', store:'CTD', storeLabel:'Citadium',          color:'#8A7A6E', colorLight:'#F0EDE8', colorText:'#4A3F38' },
+  'les-deux-bonmarche': { id:'les-deux-bonmarche', brand:'Les Deux', store:'BM', storeLabel:'Bon Marché',        color:'#8A7A6E', colorLight:'#F0EDE8', colorText:'#4A3F38' },
   'les-deux-bhv':       { id:'les-deux-bhv',       brand:'Les Deux', store:'BHV',        storeLabel:'BHV',               color:'#8A7A6E', colorLight:'#F0EDE8', colorText:'#4A3F38' },
   'nn07-glh':           { id:'nn07-glh',           brand:'NN07',     store:'GLH',        storeLabel:'GL Haussmann',      color:'#5A7A5A', colorLight:'#EDF2ED', colorText:'#2E4A2E' },
 };
@@ -1471,7 +1471,7 @@ function pageComptes() {
           <div>
             <div style="font-size:13px;font-weight:400">${u.name}</div>
             <div style="font-size:11px;color:var(--text3)">${u.email}</div>
-            ${u.spaces ? `<div style="font-size:10px;color:var(--text3);margin-top:2px">${u.spaces.map(s=>SPACES[s]?.storeLabel||s).join(' · ')}</div>` : ''}
+            ${u.spaces && u.spaces.length ? `<div style="font-size:10px;color:var(--text3);margin-top:2px">${u.spaces.map(s=>SPACES[s] ? SPACES[s].storeLabel : s).join(' · ')}</div>` : ''}
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
@@ -1540,15 +1540,17 @@ function createUser() {
   };
 
   fb.innerHTML = `<div class="alert-banner" style="background:var(--success-bg);color:var(--success);border:1px solid var(--success)">
-    Compte créé ✓ — ${name} peut se connecter avec ${email}
+    Compte créé ✓ — ${name} · ${newSpaces.length} espace(s) créé(s)<br>
+    <span style="font-size:11px">Email : ${email} · Mot de passe : ${pass}</span>
   </div>`;
 
   // Clear fields
   ['newUserName','newUserEmail','newUserPass'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-  Object.keys(SPACES).forEach(id => { const el=document.getElementById('access-'+id); if(el) el.checked=false; });
+  Object.keys(SPACES).filter(id => id !== 'nn07-glh').forEach(id => { const el=document.getElementById('access-'+id); if(el) el.checked=false; });
 
-  // Refresh page to show new user
-  setTimeout(() => navigateTo('comptes'), 1500);
+  // Refresh sidebar immediately to show new brand + refresh comptes page
+  renderSidebar();
+  setTimeout(() => navigateTo('comptes'), 1200);
 }
 
 function deleteUser(email) {
