@@ -417,6 +417,7 @@ function navigateTo(page) {
   else if(page==='catalogue')    { m.innerHTML='<div style="padding:2rem;color:var(--text3)">Chargement...</div>'; pageCatalogueAsync().then(()=>{}); }
   else if(page==='historique')   { m.innerHTML='<div style="padding:2rem;color:var(--text3)">Chargement...</div>'; pageHistoriqueAsync().then(()=>{}); }
   else if(page==='reassort')     { m.innerHTML=pageReassort(); setTimeout(bindReassort,0); }
+  else if(page==='comptes')      m.innerHTML=pageComptes();
 }
 
 // ─── BRAND GLOBAL VIEW ───────────────────────────────────────────────────────
@@ -1392,6 +1393,119 @@ function initGlobalChart() {
       }
     }
   });
+}
+
+
+// ─── GESTION DES COMPTES ──────────────────────────────────────────────────────
+function pageComptes() {
+  if (currentUser.role !== 'admin') return '<p>Accès refusé</p>';
+  const users = Object.entries(USERS).map(([email, u]) => ({ email, ...u }));
+  return `
+  <div class="page-title">Gestion des comptes</div>
+  <div class="page-sub">Créez et gérez les accès de vos partenaires marques</div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Créer un nouveau compte</div>
+      <div class="form-field" style="margin-bottom:.85rem">
+        <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.35rem">Nom de la marque</label>
+        <input class="search-input" id="newUserName" placeholder="ex: Les Deux France" style="width:100%">
+      </div>
+      <div class="form-field" style="margin-bottom:.85rem">
+        <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.35rem">Email de connexion</label>
+        <input class="search-input" type="email" id="newUserEmail" placeholder="marque@email.com" style="width:100%">
+      </div>
+      <div class="form-field" style="margin-bottom:.85rem">
+        <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.35rem">Mot de passe</label>
+        <input class="search-input" type="text" id="newUserPass" placeholder="Choisissez un mot de passe" style="width:100%">
+      </div>
+      <div class="form-field" style="margin-bottom:.85rem">
+        <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.35rem">Accès aux espaces</label>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:.3rem">
+          ${Object.entries(SPACES).map(([id, sp]) => `
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="access-${id}" style="width:14px;height:14px;cursor:pointer">
+            <div style="width:8px;height:8px;border-radius:50%;background:${sp.color}"></div>
+            ${sp.brand} — ${sp.storeLabel}
+          </label>`).join('')}
+        </div>
+      </div>
+      <div id="createUserFeedback"></div>
+      <button class="btn btn-primary" onclick="createUser()" style="width:100%;justify-content:center;margin-top:.5rem">
+        Créer le compte
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Comptes existants</div>
+      ${users.map(u => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:32px;height:32px;border-radius:50%;background:${u.role==='admin'?'var(--text)':'var(--accent-light)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:${u.role==='admin'?'var(--bg2)':'var(--accent-text)'}">
+            ${u.initials}
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:400">${u.name}</div>
+            <div style="font-size:11px;color:var(--text3)">${u.email}</div>
+            ${u.spaces ? `<div style="font-size:10px;color:var(--text3);margin-top:2px">${u.spaces.map(s=>SPACES[s]?.storeLabel||s).join(' · ')}</div>` : ''}
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="badge ${u.role==='admin'?'badge-accent':'badge-ok'}">${u.role==='admin'?'Admin':'Marque'}</span>
+          ${u.role !== 'admin' ? `<button class="btn btn-sm" onclick="deleteUser('${u.email}')" style="color:var(--danger);font-size:10px;padding:3px 8px">Supprimer</button>` : ''}
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function createUser() {
+  const name  = document.getElementById('newUserName')?.value?.trim();
+  const email = document.getElementById('newUserEmail')?.value?.trim();
+  const pass  = document.getElementById('newUserPass')?.value?.trim();
+  const fb    = document.getElementById('createUserFeedback');
+
+  if (!name || !email || !pass) {
+    fb.innerHTML = `<div class="alert-banner" style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger)">Tous les champs sont obligatoires.</div>`;
+    return;
+  }
+  if (USERS[email]) {
+    fb.innerHTML = `<div class="alert-banner" style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger)">Cet email existe déjà.</div>`;
+    return;
+  }
+
+  // Get selected spaces
+  const spaces = Object.keys(SPACES).filter(id => document.getElementById('access-' + id)?.checked);
+  if (spaces.length === 0) {
+    fb.innerHTML = `<div class="alert-banner" style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger)">Sélectionnez au moins un espace.</div>`;
+    return;
+  }
+
+  const initials = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+  USERS[email] = {
+    pass, role: 'brand',
+    brand: spaces[0],
+    spaces,
+    name,
+    initials
+  };
+
+  fb.innerHTML = `<div class="alert-banner" style="background:var(--success-bg);color:var(--success);border:1px solid var(--success)">
+    Compte créé ✓ — ${name} peut se connecter avec ${email}
+  </div>`;
+
+  // Clear fields
+  ['newUserName','newUserEmail','newUserPass'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  Object.keys(SPACES).forEach(id => { const el=document.getElementById('access-'+id); if(el) el.checked=false; });
+
+  // Refresh page to show new user
+  setTimeout(() => navigateTo('comptes'), 1500);
+}
+
+function deleteUser(email) {
+  if (!confirm('Supprimer le compte ' + email + ' ?')) return;
+  delete USERS[email];
+  navigateTo('comptes');
 }
 
 </script>
