@@ -362,26 +362,26 @@ function renderSidebar() {
       GL Champs-Élysées
     </div>
     <div class="sidebar-divider"></div>
-    ${(() => {
-      const fixedIds = ['les-deux-glh','les-deux-glce'];
-      const dynamicSpaces = Object.entries(SPACES).filter(([id]) => !fixedIds.includes(id));
-      if (!dynamicSpaces.length) return '';
-      const brands = {};
-      dynamicSpaces.forEach(([id, sp]) => {
-        if (!brands[sp.brand]) brands[sp.brand] = [];
-        brands[sp.brand].push([id, sp]);
-      });
-      return Object.entries(brands).map(([brand, spaceList]) => `
-        <div class="sidebar-section">${brand}</div>
-        ${spaceList.map(([id, sp]) => `
-        <div class="brand-pill ${currentSpace===id?'active':''}" style="${currentSpace===id?'background:'+sp.colorLight+';color:'+sp.colorText:''}" onclick="switchSpace('${id}')">
-          <div style="width:8px;height:8px;border-radius:50%;background:${sp.color}"></div>
-          ${sp.storeLabel}
-          <span class="store-badge" style="background:${sp.colorLight};color:${sp.colorText};margin-left:auto">${sp.store}</span>
-        </div>`).join('')}
-        <div class="sidebar-divider"></div>
-      `).join('');
-    })()}
+    ${Object.entries(
+        Object.entries(SPACES)
+          .filter(([id]) => id !== 'les-deux-glh' && id !== 'les-deux-glce')
+          .reduce((acc, [id, sp]) => {
+            if (!acc[sp.brand]) acc[sp.brand] = [];
+            acc[sp.brand].push({id, sp});
+            return acc;
+          }, {})
+      ).map(([brand, items]) =>
+        '<div class="sidebar-section">' + brand + '</div>' +
+        items.map(({id, sp}) =>
+          '<div class="brand-pill ' + (currentSpace===id?'active':'') + '" ' +
+          'style="' + (currentSpace===id?'background:'+sp.colorLight+';color:'+sp.colorText:'') + '" ' +
+          'onclick="switchSpace(\'' + id + '\')">' +
+          '<div style="width:8px;height:8px;border-radius:50%;background:' + sp.color + '"></div>' +
+          sp.storeLabel +
+          '</div>'
+        ).join('') +
+        '<div class="sidebar-divider"></div>'
+      ).join('')}
     `;
   }
 
