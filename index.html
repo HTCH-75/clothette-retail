@@ -516,7 +516,7 @@ function navigateTo(page) {
   if(page==='global')            { m.innerHTML=pageGlobal(); setTimeout(initGlobalChart,0); }
   else if(page==='brand-global') m.innerHTML=pageBrandGlobal();
   else if(page==='overview')     { m.innerHTML=pageOverview(); setTimeout(initSalesChart,0); }
-  else if(page==='stocks')    m.innerHTML=pageStocks();
+  else if(page==='stocks')    { m.innerHTML='<div style="padding:2rem;color:var(--text3)">Chargement des stocks...</div>'; pageStocks().then(html=>{ if(html) m.innerHTML=html; }); }
   else if(page==='depot')        { m.innerHTML=pageDepot(); setTimeout(bindDepot,0); }
   else if(page==='catalogue')    { m.innerHTML='<div style="padding:2rem;color:var(--text3)">Chargement...</div>'; pageCatalogueAsync().then(()=>{}); }
   else if(page==='historique')   { m.innerHTML='<div style="padding:2rem;color:var(--text3)">Chargement...</div>'; pageHistoriqueAsync().then(()=>{}); }
@@ -771,10 +771,32 @@ function pageOverview(){
 }
 
 // ─── STOCKS ───────────────────────────────────────────────────────────────────
-function pageStocks(){
+async function pageStocks(){
   const sp=SPACES[currentSpace];
   const isAdmin = currentUser.role === 'admin';
   let stocks = STOCKS[currentSpace]||[];
+  
+  // Load from Supabase
+  if (sb) {
+    try {
+      const {data, error} = await sb.from('stock_items').select('*').eq('space_id', currentSpace);
+      if (!error && data && data.length > 0) {
+        stocks = data.map(r => ({
+          ref: r.ean || r.ref,
+          style: r.style_name || '',
+          size: r.size || '',
+          cat: r.category || '',
+          price: r.price || 0,
+          qty: r.quantity || 0,
+          min: r.min_quantity || 3,
+          reassortCmd: r.reassort_cmd || 0,
+          reassortRecu: r.reassort_recu || 0,
+          comment: r.comment || '',
+        }));
+        STOCKS[currentSpace] = stocks; // cache
+      }
+    } catch(e) { console.error('Stock load error:', e); }
+  }
   return `
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:10px">
     <div style="display:flex;align-items:center;gap:10px">
@@ -901,6 +923,28 @@ function saveRowEdit(i) {
   r.reassortCmd  = parseInt(document.getElementById(`e-rcmd-${i}`)?.value) || 0;
   r.reassortRecu = parseInt(document.getElementById(`e-rrec-${i}`)?.value) || 0;
   r.comment    = document.getElementById(`e-comment-${i}`)?.value || '';
+  // Save to Supabase
+  if (sb) {
+    const r = stocks[i];
+    sb.from('stock_items').upsert({
+      space_id: currentSpace,
+      ean: r.ref,
+      ref: r.ref,
+      style_name: r.style,
+      size: r.size,
+      category: r.cat,
+      price: r.price || 0,
+      quantity: r.qty,
+      min_quantity: r.min,
+      reassort_cmd: r.reassortCmd || 0,
+      reassort_recu: r.reassortRecu || 0,
+      comment: r.comment || '',
+      updated_at: new Date()
+    }, {onConflict: 'space_id,ref,size'}).then(({error}) => {
+      if (error) console.error('Save error:', error);
+      else console.log('Stock saved ✓');
+    });
+  }
   const tbody = document.getElementById('stocksTbody');
   if (tbody) tbody.innerHTML = renderStocksRows(stocks, true);
 }
