@@ -1432,11 +1432,15 @@ function pageCatalogueWith(sp, missing, totalRefs) {
     <span class="badge badge-info">nouveau</span>
   </div>
   <div class="section-label">Ajouter une collection</div>
-  <div class="drop-zone" onclick="document.getElementById('inCat').click()">
+  <div class="drop-zone" onclick="document.getElementById('inCat').click()"
+    ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+    ondragleave="this.style.borderColor=''"
+    ondrop="event.preventDefault();handleCatalogueFile(event.dataTransfer.files[0])">
     <div style="font-size:22px;opacity:.35;margin-bottom:8px">↑</div>
     <div style="font-size:14px;font-weight:400;margin-bottom:.3rem">Glissez le catalogue de la nouvelle collection</div>
     <div style="font-size:12px;color:var(--text3)">.xlsx · Season, Style no., Style, Color, Color Code, Size, Category, EAN</div>
-    <input type="file" id="inCat" accept=".xlsx,.xls" style="display:none">
+    <input type="file" id="inCat" accept=".xlsx,.xls" style="display:none"
+      onchange="handleCatalogueFile(this.files[0])">
   </div>
   <div id="catFeedback"></div>
   ${missing.length ? `
@@ -1807,6 +1811,70 @@ function toggleMissingRefs() {
   const visible = list.style.display !== 'none';
   list.style.display = visible ? 'none' : 'block';
   if (btn) btn.textContent = visible ? 'Voir les références' : 'Masquer';
+}
+
+
+async function handleCatalogueFile(file) {
+  if (!file) return;
+  const fb = document.getElementById('catFeedback');
+  fb.innerHTML = `<div class="alert-banner" style="background:var(--info-bg);border:1px solid var(--info);color:var(--info);margin-top:.75rem">
+    <strong>⏳ Import du catalogue : ${file.name}</strong>
+  </div>`;
+
+  try {
+    const data = await readXlsxFile(file);
+    if (!data) throw new Error('Impossible de lire le fichier');
+
+    const headers = data[0].map(h => String(h||'').toLowerCase().trim());
+    const colSeason   = headers.findIndex(h => h.includes('season') || h.includes('style') && !h.includes('style no'));
+    const colStyleNo  = headers.findIndex(h => h.includes('style no'));
+    const colStyle    = headers.findIndex(h => h.includes('produit') || h === 'style');
+    const colColor    = headers.findIndex(h => h === 'color');
+    const colColorCode= headers.findIndex(h => h.includes('color code'));
+    const colSize     = headers.findIndex(h => h === 'size' || h === 'taille');
+    const colCat      = headers.findIndex(h => h.includes('category') || h.includes('categ'));
+    const colEan      = headers.findIndex(h => h === 'ean');
+
+    const rows = [];
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      if (!row) continue;
+      const ean = row[colEan] ? String(Math.round(Number(row[colEan]))) : null;
+      if (!ean || ean === 'NaN') continue;
+      rows.push({
+        brand_id: 'les-deux',
+        season:     String(row[colSeason]   ||''),
+        style_no:   String(row[colStyleNo]  ||''),
+        style_name: String(row[colStyle]    ||''),
+        color:      String(row[colColor]    ||''),
+        color_code: String(row[colColorCode]||''),
+        size:       String(row[colSize]     ||''),
+        category:   String(row[colCat]      ||''),
+        ean,
+      });
+    }
+
+    // Import to Supabase catalogue table in chunks of 500
+    let imported = 0;
+    if (sb && rows.length > 0) {
+      const chunkSize = 500;
+      for (let i = 0; i < rows.length; i += chunkSize) {
+        const chunk = rows.slice(i, i + chunkSize);
+        const { error } = await sb.from('catalogue').upsert(chunk, { onConflict: 'ean' });
+        if (!error) imported += chunk.length;
+      }
+    }
+
+    fb.innerHTML = `<div class="alert-banner" style="background:var(--success-bg);border:1px solid var(--success);color:var(--success);margin-top:.75rem">
+      <strong>✓ Catalogue importé : ${file.name}</strong><br>
+      <span style="font-size:12px">${imported} références ajoutées / mises à jour dans Supabase</span>
+    </div>`;
+
+  } catch(e) {
+    fb.innerHTML = `<div class="alert-banner" style="background:var(--danger-bg);border:1px solid var(--danger);color:var(--danger);margin-top:.75rem">
+      <strong>Erreur : ${e.message}</strong>
+    </div>`;
+  }
 }
 
 </script>
