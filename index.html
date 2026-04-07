@@ -781,6 +781,7 @@ async function pageStocks(){
     try {
       const {data, error} = await sb.from('stock_items').select('*').eq('space_id', currentSpace);
       if (!error && data && data.length > 0) {
+        const missing = data.filter(r => !r.style_name || r.style_name.trim() === '');
         stocks = data
           .filter(r => r.style_name && r.style_name.trim() !== '')
           .map(r => ({
@@ -795,11 +796,46 @@ async function pageStocks(){
             reassortRecu: r.reassort_recu || 0,
             comment: r.comment || '',
           }));
-        STOCKS[currentSpace] = stocks; // cache
+        STOCKS[currentSpace] = stocks;
+        MISSING[currentSpace] = missing.map(r => ({
+          ref: r.ean || r.ref,
+          style: 'Introuvable dans le catalogue',
+          colorSize: r.size || '—',
+          qty: r.quantity || 0
+        }));
       }
     } catch(e) { console.error('Stock load error:', e); }
   }
   return `
+  ${(MISSING[currentSpace]||[]).length > 0 ? `
+  <div class="alert-banner" style="background:var(--warning-bg);border:1px solid var(--warning);color:var(--warning);margin-bottom:1rem">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <strong>${(MISSING[currentSpace]||[]).length} EAN(s) introuvable(s) dans le catalogue</strong> — 
+        Ces références sont dans l'inventaire mais absentes du catalogue.
+      </div>
+      <button class="btn btn-sm" onclick="toggleMissingRefs()" style="color:var(--warning);border-color:var(--warning);margin-left:1rem" id="btnMissing">
+        Voir les références
+      </button>
+    </div>
+    <div id="missingRefsList" style="display:none;margin-top:.75rem">
+      <table style="width:100%;font-size:12px;border-collapse:collapse">
+        <thead><tr>
+          <th style="text-align:left;padding:5px 0;border-bottom:1px solid var(--warning-bg);font-size:10px;color:var(--warning);text-transform:uppercase;letter-spacing:.08em">EAN</th>
+          <th style="text-align:left;padding:5px 0;border-bottom:1px solid var(--warning-bg);font-size:10px;color:var(--warning);text-transform:uppercase;letter-spacing:.08em">Taille</th>
+          <th style="text-align:right;padding:5px 0;border-bottom:1px solid var(--warning-bg);font-size:10px;color:var(--warning);text-transform:uppercase;letter-spacing:.08em">Qté inventaire</th>
+        </tr></thead>
+        <tbody>
+          ${(MISSING[currentSpace]||[]).map(r=>`
+          <tr>
+            <td style="padding:5px 0;border-bottom:1px solid var(--warning-bg);font-family:monospace;font-size:11px">${r.ref}</td>
+            <td style="padding:5px 0;border-bottom:1px solid var(--warning-bg);color:var(--warning)">${r.colorSize}</td>
+            <td style="padding:5px 0;border-bottom:1px solid var(--warning-bg);text-align:right;font-weight:500">${r.qty}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>` : ''}
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:10px">
     <div style="display:flex;align-items:center;gap:10px">
       <div class="page-title">Stocks</div>
@@ -1760,6 +1796,16 @@ function updateComment(i, value) {
         if (error) console.error('Comment save error:', error);
       });
   }
+}
+
+
+function toggleMissingRefs() {
+  const list = document.getElementById('missingRefsList');
+  const btn = document.getElementById('btnMissing');
+  if (!list) return;
+  const visible = list.style.display !== 'none';
+  list.style.display = visible ? 'none' : 'block';
+  if (btn) btn.textContent = visible ? 'Voir les références' : 'Masquer';
 }
 
 </script>
