@@ -781,18 +781,20 @@ async function pageStocks(){
     try {
       const {data, error} = await sb.from('stock_items').select('*').eq('space_id', currentSpace);
       if (!error && data && data.length > 0) {
-        stocks = data.map(r => ({
-          ref: r.ean || r.ref,
-          style: r.style_name || '',
-          size: r.size || '',
-          cat: r.category || '',
-          price: r.price || 0,
-          qty: r.quantity || 0,
-          min: r.min_quantity || 3,
-          reassortCmd: r.reassort_cmd || 0,
-          reassortRecu: r.reassort_recu || 0,
-          comment: r.comment || '',
-        }));
+        stocks = data
+          .filter(r => r.style_name && r.style_name.trim() !== '')
+          .map(r => ({
+            ref: r.ean || r.ref,
+            style: r.style_name || '',
+            size: r.size || '',
+            cat: r.category || '',
+            price: r.price || 0,
+            qty: r.quantity || 0,
+            min: r.min_quantity || 3,
+            reassortCmd: r.reassort_cmd || 0,
+            reassortRecu: r.reassort_recu || 0,
+            comment: r.comment || '',
+          }));
         STOCKS[currentSpace] = stocks; // cache
       }
     } catch(e) { console.error('Stock load error:', e); }
@@ -836,7 +838,6 @@ async function pageStocks(){
         <th style="width:8%">Catégorie</th>
         <th style="width:7%">Prix achat</th>
         <th style="width:7%">Stock</th>
-        <th style="width:7%">Min</th>
         <th style="width:9%">Réassort cmd</th>
         <th style="width:9%">Réassort reçu</th>
         <th style="width:8%">Statut</th>
@@ -970,7 +971,6 @@ function renderStocksRows(data, isAdmin){
         <td><input style="border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:11px;width:80px;background:var(--bg2)" id="e-cat-${i}" value="${r.cat}"></td>
         <td><input type="number" style="border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:11px;width:60px;background:var(--bg2)" id="e-price-${i}" value="${r.price||0}"></td>
         <td><input type="number" style="border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:11px;width:55px;background:var(--bg2);font-weight:500" id="e-qty-${i}" value="${r.qty}"></td>
-        <td><input type="number" style="border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:11px;width:45px;background:var(--bg2)" id="e-min-${i}" value="${r.min}"></td>
         <td><input type="number" style="border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:11px;width:55px;background:var(--bg2)" id="e-rcmd-${i}" value="${r.reassortCmd||0}"></td>
         <td><input type="number" style="border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:11px;width:55px;background:var(--bg2)" id="e-rrec-${i}" value="${r.reassortRecu||0}"></td>
         <td><span class="badge badge-${st}" style="font-size:10px">${stLabel}</span></td>
@@ -988,7 +988,6 @@ function renderStocksRows(data, isAdmin){
       <td><span class="badge badge-accent" style="font-size:10px">${r.cat}</span></td>
       <td style="color:var(--text2)">${price}</td>
       <td style="font-weight:500;color:${r.qty===0?'var(--danger)':r.qty<r.min?'var(--warning)':'var(--text)'}">${r.qty}</td>
-      <td style="color:var(--text3)">${r.min}</td>
       <td style="color:${r.reassortCmd>0?'var(--info)':'var(--text3)'};font-weight:${r.reassortCmd>0?'500':'400'}">${r.reassortCmd||'—'}</td>
       <td style="color:${r.reassortRecu>0?'var(--success)':'var(--text3)'};font-weight:${r.reassortRecu>0?'500':'400'}">${r.reassortRecu||'—'}</td>
       <td><span class="badge badge-${st}">${stLabel}</span></td>
@@ -1743,6 +1742,24 @@ function buildDynamicBrandsHTML() {
     }).join('');
     return '<div class="sidebar-section">' + brand + '</div>' + pills + '<div class="sidebar-divider"></div>';
   }).join('');
+}
+
+
+function updateComment(i, value) {
+  const stocks = STOCKS[currentSpace]||[];
+  if (!stocks[i]) return;
+  stocks[i].comment = value;
+  // Save to Supabase
+  if (sb) {
+    const r = stocks[i];
+    sb.from('stock_items').update({ comment: value, updated_at: new Date() })
+      .eq('space_id', currentSpace)
+      .eq('ref', r.ref)
+      .eq('size', r.size)
+      .then(({error}) => {
+        if (error) console.error('Comment save error:', error);
+      });
+  }
 }
 
 </script>
